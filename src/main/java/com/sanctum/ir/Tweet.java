@@ -17,6 +17,7 @@
  */
 package com.sanctum.ir;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -28,8 +29,8 @@ public class Tweet {
     private final String containedFile;
     private final int tweetIndex;
     private final String rawText;
-    private String[] mentions;
-    private String[] hashtags;
+    private ArrayList<String> mentions;
+    private ArrayList<String> hashtags;
     private final HashMap<String, String> wordTags;
     
     /**
@@ -53,8 +54,23 @@ public class Tweet {
         String[] words = rawText.split(" ");
         String[] tags = TweetTagger.POS_TAGGER.tag(words);
         
+        // store word and tags in hashmap
         for (int i = 0; i < words.length; i++) {
             this.wordTags.put(words[i], tags[i]);
+        }
+        
+        // retrieve mentions
+        for (int i = 0; i < words.length; i++) {
+            if(words[i].startsWith("@")) {
+                this.mentions.add(words[i]);
+            }
+        }
+        
+        // retrieve hashtags
+        for (int i = 0; i < words.length; i++) {
+            if(words[i].startsWith("#")) {
+                this.hashtags.add(words[i]);
+            }
         }
     }
     
@@ -62,7 +78,7 @@ public class Tweet {
      * Returns the mentions in the text if it has any.
      * @return String[]
      */
-    public String[] getMentions() {
+    public ArrayList<String> getMentions() {
         return this.mentions;
     }
     
@@ -70,7 +86,7 @@ public class Tweet {
      * Returns the hashtags in the text if it has any.
      * @return 
      */
-    public String[] getHashtags() {
+    public ArrayList<String> getHashtags() {
         return this.hashtags;
     }
     

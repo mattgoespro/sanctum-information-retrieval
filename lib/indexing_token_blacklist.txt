@@ -1,0 +1,11 @@
+##########################################################
+# Token Blacklist/Stop-words
+# All words in this file will be excluded in the indexing
+# into the inverted file
+# ANY LINES BEGINNING WITH A HASHTAG IN THIS FILE 
+# WILL NOT BE READ
+##########################################################
+a
+the
+it
+is
