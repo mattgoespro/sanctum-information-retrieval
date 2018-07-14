@@ -17,6 +17,7 @@
  */
 package com.sanctum.ir;
 
+import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -26,6 +27,7 @@ import java.util.HashMap;
  */
 public class Tweet {
     
+    private TagFilter filter;
     private final String containedFile;
     private final int tweetIndex;
     private final String rawText;
@@ -44,6 +46,12 @@ public class Tweet {
         this.tweetIndex = tweetIndex;
         this.rawText = rawText;
         this.wordTags = new HashMap();
+        this.filter = new TagFilter();
+        try {
+            this.filter.loadBlacklist(TagFilter.TAG_BLACKLIST);
+        } catch (FileNotFoundException ex) {
+            System.out.println("Unable to load blacklist file.");
+        }
         tagText();
     }
     
