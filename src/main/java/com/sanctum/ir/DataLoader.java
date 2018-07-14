@@ -46,12 +46,17 @@ public class DataLoader {
         File dataFiles = new File(FILE_LOCATION);
         
         if(!dataFiles.exists()) {
-            System.out.println("Unable to find folder.");
+            System.out.println("Error: Unable to find directory " + FILE_LOCATION + ".");
             return;
         }
         
         ArrayList<String> filePaths = new ArrayList();
         getFiles(dataFiles, filePaths, new TweetFileFilter());
+        
+        if(filePaths.isEmpty()) {
+            System.out.println("Error: File paths could not be found.");
+            return;
+        }
         
         for (String filePath : filePaths) {
             loaders.add(new TweetLoader(filePath));
@@ -68,7 +73,7 @@ public class DataLoader {
      */
     private void getFiles(File root, ArrayList<String> paths, TweetFileFilter filter) {
         if(root.isDirectory()) {
-            for (File child : root.listFiles(filter)) {
+            for (File child : root.listFiles()) {
                 getFiles(child, paths, filter);
             }
         } else {

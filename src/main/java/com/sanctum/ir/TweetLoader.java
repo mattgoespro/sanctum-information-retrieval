@@ -60,11 +60,14 @@ public class TweetLoader {
         BufferedReader fileReader = new BufferedReader(new FileReader(this.fileName));
         int count = 0;
         String line = fileReader.readLine();
-
+        
         while (line != null) {
-            this.tweets[count] = new Tweet(this.fileName, count, line);
+            if (!line.equals("")) {
+                this.tweets[count] = new Tweet(this.fileName, count, line);
+                this.tweets[count].tagText();
+                ++count;
+            }
             line = fileReader.readLine();
-            ++count;
         }
     }
 

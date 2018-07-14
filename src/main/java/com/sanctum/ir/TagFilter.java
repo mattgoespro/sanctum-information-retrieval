@@ -20,41 +20,129 @@ package com.sanctum.ir;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Scanner;
 
 /**
  * Class that is used to filter and process tags.
+ *
  * @author Matt
  */
 public class TagFilter {
-    
+
     public static String TAG_BLACKLIST = "lib/indexing_token_blacklist.txt";
-    
+
     private ArrayList<String> tagValueBlacklist;
     private ArrayList<String> tagPosBlacklist;
-    
+    private boolean inclMentions, inclHashtags, inclLinks;
+
+    /**
+     * Constructor
+     *
+     * @param inclMentions
+     * @param inclHashtags
+     * @param inclLinks
+     */
+    public TagFilter(boolean inclMentions, boolean inclHashtags, boolean inclLinks) {
+        this.inclMentions = inclMentions;
+        this.inclHashtags = inclHashtags;
+        this.inclLinks = inclLinks;
+    }
+
     /**
      * Loads the list of words from a file to exclude from indexing.
+     *
      * @param blacklistFile
-     * @throws FileNotFoundException 
+     * @throws FileNotFoundException
      */
     public void loadBlacklist(String blacklistFile) throws FileNotFoundException {
         this.tagValueBlacklist = new ArrayList();
         this.tagPosBlacklist = new ArrayList();
         Scanner scFile = new Scanner(new File(blacklistFile));
-        String line = scFile.nextLine();
-        
-        while(line != null) {
-            if(!line.startsWith("#")) {
-                if(!line.startsWith("!")) {
+        String line;
+
+        while (scFile.hasNext()) {
+            line = scFile.nextLine();
+
+            if (!line.startsWith("#")) {
+                if (!line.startsWith("!")) {
                     this.tagValueBlacklist.add(line);
                 } else {
                     this.tagPosBlacklist.add(line.substring(1));
                 }
             }
-            line = scFile.nextLine();
         }
-        
+
         scFile.close();
+    }
+
+    /**
+     * Choose whether to include mentions in the indexing.
+     *
+     * @param inclMentions
+     */
+    public void includeMentions(boolean inclMentions) {
+        this.inclMentions = inclMentions;
+    }
+    
+    /**
+     * Returns whether the filter should include mentions in indexing.
+     * @return boolean
+     */
+    public boolean includesMentions() {
+        return this.inclMentions;
+    }
+
+    /**
+     * Choose whether to include hashtags in the indexing.
+     *
+     * @param inclHashtags
+     */
+    public void includeHashtags(boolean inclHashtags) {
+        this.inclHashtags = inclHashtags;
+    }
+    
+    /**
+     * Returns whether the filter should include hashtags in indexing.
+     * @return boolean
+     */
+    public boolean includesHashtags() {
+        return this.inclHashtags;
+    }
+
+    /**
+     * Choose whether to include links in the indexing.
+     *
+     * @param inclLinks
+     */
+    public void includeLinks(boolean inclLinks) {
+        this.inclLinks = inclLinks;
+    }
+    
+    /**
+     * Returns whether the filter should include links in indexing.
+     * @return boolean
+     */
+    public boolean includesLinks() {
+        return this.inclLinks;
+    }
+    
+    /**
+     * Filters the text for indexing.
+     * @param words
+     * @param tags
+     * @return HashMap<String, String>
+     */
+    public HashMap<String, String> filterText(String[] words, String[] tags) {
+        HashMap<String, String> wordTags = new HashMap();
+
+        // store word and tags in hashmap
+        for (int i = 7; i < words.length; i++) {
+            if ((words[i].startsWith("#") && this.inclHashtags) || (words[i].startsWith("@") && this.inclMentions) || (words[i].startsWith("http://") && this.inclLinks)) {
+                wordTags.put(words[i], tags[i]);
+            }
+        }
+
+        return wordTags;
     }
 }
