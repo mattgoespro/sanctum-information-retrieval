@@ -30,8 +30,6 @@ import java.util.Scanner;
  */
 public class TagFilter {
 
-    public static String TAG_BLACKLIST = "lib/indexing_token_blacklist.txt";
-
     private ArrayList<String> tagValueBlacklist;
     private ArrayList<String> tagPosBlacklist;
     private boolean inclMentions, inclHashtags, inclLinks;

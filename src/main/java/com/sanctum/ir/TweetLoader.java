@@ -91,12 +91,12 @@ public class TweetLoader {
     }
 
     /**
-     * Returns the name of the file that is being read.
+     * Returns the file that is being read.
      *
-     * @return String
+     * @return File
      */
-    public String getFileName() {
-        return this.fileName;
+    public File getFile() {
+        return this.file;
     }
 
     /**

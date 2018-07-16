@@ -26,7 +26,6 @@ import java.util.ArrayList;
  */
 public class DataLoader {
     
-    public static final String FILE_LOCATION = "twitter_sample/twitter";
     private ArrayList<TweetLoader> loaders;
     
     /**
@@ -34,19 +33,18 @@ public class DataLoader {
      */
     public DataLoader() {
         this.loaders = new ArrayList();
-        loadData();
     }
     
     /**
      * Loads the tweet data from the HDFS.
      */
-    private void loadData() {
-        System.out.println("Loading data from " + FILE_LOCATION);
+    public void loadData() {
+        System.out.println("Loading data from " + Configuration.get(Configuration.DATA_DIRECTORY));
         long startTime = System.currentTimeMillis();
-        File dataFiles = new File(FILE_LOCATION);
+        File dataFiles = new File(Configuration.get(Configuration.DATA_DIRECTORY));
         
         if(!dataFiles.exists()) {
-            System.out.println("Error: Unable to find directory " + FILE_LOCATION + ".");
+            System.out.println("Error: Unable to find directory " + Configuration.get(Configuration.DATA_DIRECTORY) + ".");
             return;
         }
         

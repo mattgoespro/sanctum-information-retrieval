@@ -55,7 +55,7 @@ public class Tweet {
         this.filter = new TagFilter(true, true, false);
 
         try {
-            this.filter.loadBlacklist(TagFilter.TAG_BLACKLIST);
+            this.filter.loadBlacklist(Configuration.get(Configuration.INDEXING_TOKEN_BLACKLIST));
         } catch (FileNotFoundException ex) {
             System.out.println("Unable to load blacklist file.");
         }

@@ -5,6 +5,7 @@
  */
 package com.sanctum.driver;
 
+import com.sanctum.ir.Configuration;
 import com.sanctum.ir.DataLoader;
 
 /**
@@ -18,6 +19,13 @@ public class Main {
      */
     public static void main(String[] args) {
         DataLoader loader = new DataLoader();
+        boolean config = Configuration.loadConfiguration("config.cfg");
+
+        if (config) {
+            loader.loadData();
+        } else {
+            System.out.println("Failed to load config.");
+        }
     }
-    
+
 }

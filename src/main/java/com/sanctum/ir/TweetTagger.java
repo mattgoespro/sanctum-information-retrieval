@@ -28,7 +28,7 @@ import opennlp.tools.postag.POSTaggerME;
 public class TweetTagger {
     
     // The model for the tagger to use
-    public static String POS_MODEL_FILE = "pos_learning_models/en-pos-maxent.bin";
+    public static String POS_MODEL_FILE = Configuration.get(Configuration.POS_LEARNING_MODEL);
     
     // Global tagger object for tagging tweets
     public static final POSTaggerME POS_TAGGER = new POSTaggerME(new POSModelLoader().load(new File(TweetTagger.POS_MODEL_FILE)));
