@@ -27,7 +27,7 @@ import java.util.HashMap;
  * @author Matt
  */
 public class Tweet {
-
+    
     private TagFilter filter;
     private final String containedFile;
     private final int tweetIndex;
@@ -67,34 +67,35 @@ public class Tweet {
     public void tagText() {
         String[] words = rawText.split(" ");
         String[] tags = TweetTagger.POS_TAGGER.tag(words);
-        
+        System.out.println(TweetTagger.POS_TAGGER);
+
         // only if timestamp exists will it tag the words
         if (words.length >= 7) {
             this.timeStamp = words[0] + " " + words[1] + " " + words[2] + " " + words[3] + " " + words[4] + " " + words[5] + " " + words[6];
             this.wordTags = filter.filterText(words, tags);
-            
+
             // retrieve hashtags
-            if(filter.includesHashtags()) {
+            if (filter.includesHashtags()) {
                 for (int i = 7; i < words.length; i++) {
-                    if(words[i].startsWith("#")) {
+                    if (words[i].startsWith("#")) {
                         this.hashtags.add(words[i]);
                     }
                 }
             }
-            
+
             // retrieve mentions
-            if(filter.includesMentions()) {
+            if (filter.includesMentions()) {
                 for (int i = 7; i < words.length; i++) {
-                    if(words[i].startsWith("@")) {
+                    if (words[i].startsWith("@")) {
                         this.mentions.add(words[i]);
                     }
                 }
             }
-            
+
             // retrieve links
-            if(filter.includesLinks()) {
+            if (filter.includesLinks()) {
                 for (int i = 7; i < words.length; i++) {
-                    if(words[i].startsWith("http://")) {
+                    if (words[i].startsWith("http://")) {
                         this.links.add(words[i]);
                     }
                 }

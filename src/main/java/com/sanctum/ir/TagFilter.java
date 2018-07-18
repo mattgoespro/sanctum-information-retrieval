@@ -136,7 +136,15 @@ public class TagFilter {
 
         // store word and tags in hashmap
         for (int i = 7; i < words.length; i++) {
+            // ignore words with a specific part-of-speech
+            if(this.tagPosBlacklist.contains(tags[i])) continue;
+            
+            // ignore specific words
+            if(this.tagValueBlacklist.contains(words[i])) continue;
+            
             if ((words[i].startsWith("#") && this.inclHashtags) || (words[i].startsWith("@") && this.inclMentions) || (words[i].startsWith("http://") && this.inclLinks)) {
+                wordTags.put(words[i], tags[i]);
+            } else {
                 wordTags.put(words[i], tags[i]);
             }
         }

@@ -22,8 +22,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Loads the text from a file into its respective Tweets.
@@ -32,10 +30,9 @@ import java.util.logging.Logger;
  */
 public class TweetLoader {
 
-    private File file;
-    private String fileName;
-
-    private Tweet[] tweets;
+    protected File file;
+    protected String fileName;
+    protected Tweet[] tweets;
 
     /**
      * Constructor
@@ -45,18 +42,14 @@ public class TweetLoader {
     public TweetLoader(String fileName) {
         this.fileName = fileName;
         this.file = new File(fileName);
-        try {
-            readTweets();
-        } catch (IOException ex) {
-            Logger.getLogger(TweetLoader.class.getName()).log(Level.SEVERE, null, ex);
-        }
     }
 
     /**
      * Reads the Tweets from the file specified.
+     * @throws java.io.IOException
      */
-    private void readTweets() throws IOException {
-        this.tweets = new Tweet[fileSize()];
+    public void readTweets() throws IOException {
+        this.tweets = new Tweet[fileSize(this.fileName)];
         BufferedReader fileReader = new BufferedReader(new FileReader(this.fileName));
         int count = 0;
         String line = fileReader.readLine();
@@ -74,12 +67,13 @@ public class TweetLoader {
     /**
      * Returns the number of lines in a File.
      *
+     * @param fileName
      * @return Integer
      * @throws FileNotFoundException
      * @throws IOException
      */
-    private int fileSize() throws FileNotFoundException, IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(this.fileName));
+    public static int fileSize(String fileName) throws FileNotFoundException, IOException {
+        BufferedReader reader = new BufferedReader(new FileReader(fileName));
         int lines = 0;
 
         while (reader.readLine() != null) {

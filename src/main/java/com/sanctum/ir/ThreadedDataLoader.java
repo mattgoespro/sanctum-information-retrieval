@@ -24,68 +24,76 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 
 /**
- * Class for loading all Twitter data from the HDFS
+ * Multithreaded DataLoader class
+ *
  * @author Matt
  */
-public class DataLoader {
-    
-    protected ArrayList<TweetLoader> loaders;
-    
+public class ThreadedDataLoader extends DataLoader {
+
+    private int threadsPerFile;
+    private ArrayList<TweetLoaderThread> threads;
+
     /**
      * Constructor
+     *
+     * @param threadsPerFile
      */
-    public DataLoader() {
-        this.loaders = new ArrayList();
+    public ThreadedDataLoader(int threadsPerFile) {
+        super();
+        this.threads = new ArrayList();
+        this.threadsPerFile = threadsPerFile;
     }
-    
-    /**
-     * Loads the tweet data from the HDFS.
-     */
+
+    @Override
     public void loadData() {
         System.out.println("Loading data from " + Configuration.get(Configuration.DATA_DIRECTORY));
         long startTime = System.currentTimeMillis();
         File dataFiles = new File(Configuration.get(Configuration.DATA_DIRECTORY));
-        
-        if(!dataFiles.exists()) {
+
+        if (!dataFiles.exists()) {
             System.out.println("Error: Unable to find directory " + Configuration.get(Configuration.DATA_DIRECTORY) + ".");
             return;
         }
-        
+
         ArrayList<String> filePaths = new ArrayList();
         getFiles(dataFiles, filePaths, new TweetFileFilter());
-        
-        if(filePaths.isEmpty()) {
+
+        if (filePaths.isEmpty()) {
             System.out.println("Error: File paths could not be found.");
             return;
         }
-        
-        for (String filePath : filePaths) {
-            TweetLoader l = new TweetLoader(filePath);
+
+        // start threads
+        for (String path : filePaths) {
             try {
-                l.readTweets();
-                loaders.add(l);
+                int numLines = (int) Math.ceil(TweetLoader.fileSize(path));
+                for (int i = 0; i < this.threadsPerFile; i++) {
+                    TweetLoaderThread t = new TweetLoaderThread(path, i, (int)Math.ceil(numLines / this.threadsPerFile));
+                    this.threads.add(t);
+                    t.start();
+                }
             } catch (IOException ex) {
-                Logger.getLogger(DataLoader.class.getName()).log(Level.SEVERE, null, ex);
+                Logger.getLogger(ThreadedDataLoader.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
         
-        System.out.println("Loading successful (" + (System.currentTimeMillis() - startTime)/1000.0 + " sec)");
+        while(!allDone()) {
+            // do nothing
+        }
+        
+        System.out.println("Loading successful (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec)");
     }
     
     /**
-     * Finds all Twitter file paths within a directory.
-     * @param root
-     * @param paths
-     * @param filter 
+     * Checks if all threads have completed their tasks.
+     * @return boolean
      */
-    protected void getFiles(File root, ArrayList<String> paths, TweetFileFilter filter) {
-        if(root.isDirectory()) {
-            for (File child : root.listFiles()) {
-                getFiles(child, paths, filter);
-            }
-        } else {
-            paths.add(root.getAbsolutePath());
+    private boolean allDone() {
+        boolean done = true;
+        for (TweetLoaderThread t : this.threads) {
+            done &= t.done;
         }
+        
+        return done;
     }
-    
 }
