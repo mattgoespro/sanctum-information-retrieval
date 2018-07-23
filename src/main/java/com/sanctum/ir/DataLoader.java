@@ -80,7 +80,7 @@ public class DataLoader {
      */
     protected void getFiles(File root, ArrayList<String> paths, TweetFileFilter filter) {
         if(root.isDirectory()) {
-            for (File child : root.listFiles()) {
+            for (File child : root.listFiles(filter)) {
                 getFiles(child, paths, filter);
             }
         } else {

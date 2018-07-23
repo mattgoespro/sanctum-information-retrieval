@@ -22,6 +22,8 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import opennlp.tools.postag.POSModel;
+import opennlp.tools.postag.POSTaggerME;
 
 /**
  * Loads the text from a file into its respective Tweets.
@@ -54,10 +56,13 @@ public class TweetLoader {
         int count = 0;
         String line = fileReader.readLine();
         
+        String POS_MODEL_FILE = Configuration.get(Configuration.POS_LEARNING_MODEL);
+        POSTaggerME POS_TAGGER = new POSTaggerME(new POSModel(new File(POS_MODEL_FILE)));
+        
         while (line != null) {
             if (!line.equals("")) {
                 this.tweets[count] = new Tweet(this.fileName, count, line);
-                this.tweets[count].tagText();
+                this.tweets[count].tagText(POS_TAGGER);
                 ++count;
             }
             line = fileReader.readLine();

@@ -67,25 +67,41 @@ public class ThreadedDataLoader extends DataLoader {
         for (String path : filePaths) {
             try {
                 int numLines = (int) Math.ceil(TweetLoader.fileSize(path));
-                for (int i = 0; i < this.threadsPerFile; i++) {
-                    TweetLoaderThread t = new TweetLoaderThread(path, i, (int)Math.ceil(numLines / this.threadsPerFile));
-                    this.threads.add(t);
-                    t.start();
+                
+                // skip empty files
+                if (numLines == 0) {
+                    continue;
                 }
+
+                int tweetsPerThread = (int) Math.ceil(numLines / this.threadsPerFile);
+
+                // ensure there are always more tweets than threads
+                if (tweetsPerThread >= 1) {
+                    for (int i = 0; i < this.threadsPerFile; i++) {
+                        TweetLoaderThread t = new TweetLoaderThread(path, i, tweetsPerThread);
+                        this.threads.add(t);
+                        t.start();
+                    }
+                } else {
+                    System.out.println("Error: You can't have that many threads.");
+                    return;
+                }
+
             } catch (IOException ex) {
                 Logger.getLogger(ThreadedDataLoader.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
-        
-        while(!allDone()) {
+
+        while (!allDone()) {
             // do nothing
         }
-        
+
         System.out.println("Loading successful (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec)");
     }
-    
+
     /**
      * Checks if all threads have completed their tasks.
+     *
      * @return boolean
      */
     private boolean allDone() {
@@ -93,7 +109,7 @@ public class ThreadedDataLoader extends DataLoader {
         for (TweetLoaderThread t : this.threads) {
             done &= t.done;
         }
-        
+
         return done;
     }
 }

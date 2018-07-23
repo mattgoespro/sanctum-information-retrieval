@@ -28,7 +28,9 @@ import java.util.Scanner;
  */
 public class Configuration {
     
-    public static final String POS_LEARNING_MODEL = "Parts-of-speech learning model", INDEXING_TOKEN_BLACKLIST = "Indexing token blacklist", DATA_DIRECTORY = "Twitter data directory";
+    public static final String POS_LEARNING_MODEL = "Parts-of-speech learning model", INDEXING_TOKEN_BLACKLIST = "Indexing token blacklist", 
+            DATA_DIRECTORY = "Twitter data directory", INDEXING_INCLUDE_HASHTAGS = "Include hashtags", INDEXING_INCLUDE_MENTIONS = "Include mentions",
+            INDEXING_INCLUDE_LINKS = "Include links";
     private static final HashMap<String, String> CONF_STRINGS = new HashMap(); 
     
     /**
@@ -54,6 +56,9 @@ public class Configuration {
                     if(line.startsWith(Configuration.POS_LEARNING_MODEL)) Configuration.CONF_STRINGS.put(Configuration.POS_LEARNING_MODEL, value);
                     else if(line.startsWith(Configuration.INDEXING_TOKEN_BLACKLIST)) Configuration.CONF_STRINGS.put(Configuration.INDEXING_TOKEN_BLACKLIST, value);
                     else if(line.startsWith(Configuration.DATA_DIRECTORY)) Configuration.CONF_STRINGS.put(Configuration.DATA_DIRECTORY, value);
+                    else if(line.startsWith(Configuration.INDEXING_INCLUDE_HASHTAGS)) Configuration.CONF_STRINGS.put(Configuration.INDEXING_INCLUDE_HASHTAGS, value);
+                    else if(line.startsWith(Configuration.INDEXING_INCLUDE_MENTIONS)) Configuration.CONF_STRINGS.put(Configuration.INDEXING_INCLUDE_LINKS, value);
+                    else if(line.startsWith(Configuration.INDEXING_INCLUDE_LINKS)) Configuration.CONF_STRINGS.put(Configuration.INDEXING_INCLUDE_LINKS, value);
                     else return false;
                 }
                 

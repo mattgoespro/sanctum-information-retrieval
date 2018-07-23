@@ -6,9 +6,7 @@
 package com.sanctum.driver;
 
 import com.sanctum.ir.Configuration;
-import com.sanctum.ir.DataLoader;
 import com.sanctum.ir.ThreadedDataLoader;
-import com.sanctum.ir.TweetTagger;
 
 /**
  *
@@ -20,7 +18,7 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        ThreadedDataLoader loader = new ThreadedDataLoader(8);
+        ThreadedDataLoader loader = new ThreadedDataLoader(10);
         boolean config = Configuration.loadConfiguration("config.cfg");
         
         if (config) {

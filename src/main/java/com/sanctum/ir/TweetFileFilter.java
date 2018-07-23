@@ -28,8 +28,6 @@ public class TweetFileFilter implements FileFilter {
 
     @Override
     public boolean accept(File pathname) {
-        if(pathname.length() == 0) return false;
-        
         if(pathname.isFile()) {
             if(pathname.getName().startsWith("stream")) {
                 return true;

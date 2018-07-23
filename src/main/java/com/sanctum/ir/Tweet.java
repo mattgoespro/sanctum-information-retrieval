@@ -20,6 +20,7 @@ package com.sanctum.ir;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import opennlp.tools.postag.POSTaggerME;
 
 /**
  * Tweet class represents the raw tweet data and its tagged parts.
@@ -37,6 +38,7 @@ public class Tweet {
     private ArrayList<String> links;
     private HashMap<String, String> wordTags;
     private String timeStamp;
+    
 
     /**
      * Constructor
@@ -52,7 +54,7 @@ public class Tweet {
         this.mentions = new ArrayList();
         this.hashtags = new ArrayList();
         this.links = new ArrayList();
-        this.filter = new TagFilter(true, true, false);
+        this.filter = new TagFilter();
 
         try {
             this.filter.loadBlacklist(Configuration.get(Configuration.INDEXING_TOKEN_BLACKLIST));
@@ -63,15 +65,15 @@ public class Tweet {
 
     /**
      * Tags the text of the tweet with its parts of speech.
+     * @param tagger
      */
-    public void tagText() {
+    public void tagText(POSTaggerME tagger) {
         String[] words = rawText.split(" ");
-        String[] tags = TweetTagger.POS_TAGGER.tag(words);
-        System.out.println(TweetTagger.POS_TAGGER);
+        String[] tags = tagger.tag(words);
 
         // only if timestamp exists will it tag the words
-        if (words.length >= 7) {
-            this.timeStamp = words[0] + " " + words[1] + " " + words[2] + " " + words[3] + " " + words[4] + " " + words[5] + " " + words[6];
+        if (words[0].equals("Mon") || words[0].equals("Tue") || words[0].equals("Wed") || words[0].equals("Thu") || words[0].equals("Fri") || words[0].equals("Sat") || words[0].equals("Sun")) {
+            this.timeStamp = words[0] + " " + words[1] + " " + words[2] + " " + words[3] + " " + words[4] + " " + words[5];
             this.wordTags = filter.filterText(words, tags);
 
             // retrieve hashtags
