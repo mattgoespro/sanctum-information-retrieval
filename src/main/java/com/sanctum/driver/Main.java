@@ -20,7 +20,7 @@ public class Main {
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        ThreadedDataLoader loader = new ThreadedDataLoader(2);
+        ThreadedDataLoader loader = new ThreadedDataLoader(8);
         boolean config = Configuration.loadConfiguration("config.cfg");
         
         if (config) {
