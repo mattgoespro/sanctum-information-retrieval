@@ -1,11 +1,30 @@
 ##########################################################
 # Token Blacklist/Stop-words
 # All words in this file will be excluded in the indexing
-# into the inverted file
+# into the inverted file. POS tags beginning with '!' will
+# also be excluded.
+#
 # ANY LINES BEGINNING WITH A HASHTAG IN THIS FILE 
 # WILL NOT BE READ
 ##########################################################
 a
 the
 it
+to
 is
+!CC
+!CD
+!DT
+!EX
+!LS
+!PDT
+!CC
+!FW
+!WRB
+!IN
+!VBP
+!WP$
+!POS
+!PRP
+!PRP$
+!RP

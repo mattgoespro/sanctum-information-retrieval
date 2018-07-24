@@ -26,17 +26,19 @@ import opennlp.tools.postag.POSTaggerME;
 
 /**
  * TweetLoader class that loads only a part of a data file.
+ *
  * @author Matt
  */
 public class PartialTweetLoader extends TweetLoader {
-    
+
     private int id, numTweets;
-    
+
     /**
      * Constructor
+     *
      * @param fileName
      * @param id
-     * @param numTweets 
+     * @param numTweets
      */
     public PartialTweetLoader(String fileName, int id, int numTweets) {
         super(fileName);
@@ -46,34 +48,37 @@ public class PartialTweetLoader extends TweetLoader {
     
     @Override
     public void readTweets() throws IOException {
-        if(this.numTweets == 0) return;
-        
+        if (this.numTweets == 0) {
+            return;
+        }
+
         this.tweets = new Tweet[this.numTweets];
         BufferedReader fileReader = new BufferedReader(new FileReader(this.fileName));
         int startLine = this.id * this.numTweets;
-        int endLine = startLine + this.numTweets - 1;
+        int endLine = startLine + this.numTweets;
         int currLine = 0;
         int count = 0;
         String line = fileReader.readLine();
-        
+
         String POS_MODEL_FILE = Configuration.get(Configuration.POS_LEARNING_MODEL);
         POSTaggerME POS_TAGGER = new POSTaggerME(new POSModel(new File(POS_MODEL_FILE)));
-        
+
         while (line != null) {
-            if (!line.replaceAll("\\s+", "").equals("")) {
-                ++currLine;
-                if(currLine < startLine) {
-                    continue;
-                }
-                
-                this.tweets[count] = new Tweet(this.fileName, count, line);
-                this.tweets[count].tagText(POS_TAGGER);
-                ++count;
-                
-                if(currLine == endLine) break;
+            ++currLine;
+            if (currLine < startLine) {
+                continue;
+            }
+
+            this.tweets[count] = new Tweet(this.fileName, count, line);
+            this.tweets[count].tagText(POS_TAGGER);
+            System.out.println(this.tweets[count]);
+            ++count;
+
+            if (currLine == endLine) {
+                break;
             }
             line = fileReader.readLine();
         }
     }
-    
+
 }

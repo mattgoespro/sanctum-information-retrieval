@@ -168,7 +168,12 @@ public class Tweet {
         return this.tweetIndex;
     }
 
+    @Override
     public String toString() {
-        return this.wordTags.toString();
+        if(this.wordTags != null) {
+            return this.wordTags.toString();
+        }
+        
+        return "";
     }
 }

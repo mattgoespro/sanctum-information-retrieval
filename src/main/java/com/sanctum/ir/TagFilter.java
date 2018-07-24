@@ -141,7 +141,7 @@ public class TagFilter {
             if ((words[i].startsWith("#") && this.inclHashtags) || (words[i].startsWith("@") && this.inclMentions) || (words[i].startsWith("http://") && this.inclLinks)) {
                 wordTags.put(words[i], tags[i]);
             } else {
-                wordTags.put(words[i], tags[i]);
+                wordTags.put(words[i],tags[i]);
             }
         }
 
