@@ -68,7 +68,9 @@ public class Tweet {
      * @param tagger
      */
     public void tagText(POSTaggerME tagger) {
-        String[] words = rawText.split(" ");
+        String[] rawWords = rawText.split(" ");
+        String[] words = filter(rawWords);
+        
         String[] tags = tagger.tag(words);
 
         // only if timestamp exists will it tag the words
@@ -167,6 +169,14 @@ public class Tweet {
     public int getTweetIndex() {
         return this.tweetIndex;
     }
+    
+    /**
+     * Returns the list of filtered words and tags.
+     * @return HashMap
+     */
+    public HashMap<String, String> getWords() {
+        return this.wordTags;
+    }
 
     @Override
     public String toString() {
@@ -175,5 +185,19 @@ public class Tweet {
         }
         
         return "";
+    }
+
+    private String[] filter(String[] rawWords) {
+        String[] newWords = new String[rawWords.length];
+        
+        for (int i = 0; i < rawWords.length; i++) {
+            if(!rawWords[i].startsWith("#") && !rawWords[i].startsWith("http://") && !rawWords[i].startsWith("@")) {
+                newWords[i] = rawWords[i].replaceAll("\\p{P}", "");
+            } else {
+                newWords[i] = rawWords[i];
+            }
+        }
+        
+        return newWords;
     }
 }

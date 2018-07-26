@@ -112,4 +112,14 @@ public class ThreadedDataLoader extends DataLoader {
 
         return done;
     }
+    
+    public ArrayList<Tweet[]> getLoadedData() {
+        ArrayList<Tweet[]> data = new ArrayList();
+        
+        for (TweetLoaderThread thread : this.threads) {
+            data.add(thread.getLoader().getTweets());
+        }
+        
+        return data;
+    }
 }

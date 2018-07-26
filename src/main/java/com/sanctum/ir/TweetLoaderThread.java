@@ -56,4 +56,12 @@ public class TweetLoaderThread extends Thread {
         }
     }
     
+    /**
+     * Returns the TweetLoader of this thread.
+     * @return PartialTweetLoader
+     */
+    public PartialTweetLoader getLoader() {
+        return this.loader;
+    }
+    
 }
