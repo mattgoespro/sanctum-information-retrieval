@@ -20,7 +20,9 @@ package com.sanctum.ir;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Scanner;
 
 /**
@@ -33,7 +35,8 @@ public class TagFilter {
     private ArrayList<String> tagValueBlacklist;
     private ArrayList<String> tagPosBlacklist;
     private boolean inclMentions, inclHashtags, inclLinks;
-
+    private List<String> punctuation = Arrays.asList("!", "[", "]", "{", "}", ".", ",", "?", "/", "\\", "|", "(", ")", "@", "#", "$", "%", "^", "&", "*", "_", "-", "+", "=", "`", "~", "<", ">", ":", ";", "'", "\"");
+    
     /**
      * Constructor
      */
@@ -66,7 +69,6 @@ public class TagFilter {
                 }
             }
         }
-
         scFile.close();
     }
 
@@ -137,6 +139,9 @@ public class TagFilter {
             
             // ignore specific words
             if(this.tagValueBlacklist.contains(words[i])) continue;
+            
+            // ignore punctuation marks
+            if(this.punctuation.contains(words[i])) continue;
             
             if ((words[i].startsWith("#") && this.inclHashtags) || (words[i].startsWith("@") && this.inclMentions) || (words[i].startsWith("http://") && this.inclLinks)) {
                 wordTags.put(words[i], tags[i]);

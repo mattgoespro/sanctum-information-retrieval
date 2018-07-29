@@ -17,13 +17,13 @@
  */
 package com.sanctum.ir;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.Scanner;
 import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSTaggerME;
+import opennlp.tools.tokenize.TokenizerME;
+import opennlp.tools.tokenize.TokenizerModel;
 
 /**
  * TweetLoader class that loads only a part of a data file.
@@ -61,8 +61,10 @@ public class PartialTweetLoader extends TweetLoader {
         int count = 0;
         String line;
 
-        String POS_MODEL_FILE = Configuration.get(Configuration.POS_LEARNING_MODEL);
-        POSTaggerME POS_TAGGER = new POSTaggerME(new POSModel(new File(POS_MODEL_FILE)));
+        String posModel = Configuration.get(Configuration.POS_LEARNING_MODEL);
+        POSTaggerME posTagger = new POSTaggerME(new POSModel(new File(posModel)));
+        String tokenModel = Configuration.get(Configuration.TOKENIZER_MODEL);
+        TokenizerME tokenizer = new TokenizerME(new TokenizerModel(new File(tokenModel)));
 
         while (scFile.hasNextLine()) {
             line = scFile.nextLine();
@@ -74,9 +76,8 @@ public class PartialTweetLoader extends TweetLoader {
             
             this.tweets[count] = new Tweet(this.fileName, count, line);
             try {
-                this.tweets[count].tagText(POS_TAGGER);
-            } catch (Exception e) {
-            }
+                this.tweets[count].tagText(posTagger, tokenizer);
+            } catch (Exception e) {}
 
             System.out.println(this.tweets[count]);
             ++count;

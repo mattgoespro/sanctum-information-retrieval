@@ -21,6 +21,7 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import opennlp.tools.postag.POSTaggerME;
+import opennlp.tools.tokenize.TokenizerME;
 
 /**
  * Tweet class represents the raw tweet data and its tagged parts.
@@ -66,11 +67,10 @@ public class Tweet {
     /**
      * Tags the text of the tweet with its parts of speech.
      * @param tagger
+     * @param tokenizer
      */
-    public void tagText(POSTaggerME tagger) {
-        String[] rawWords = rawText.split(" ");
-        String[] words = filter(rawWords);
-        
+    public void tagText(POSTaggerME tagger, TokenizerME tokenizer) {
+        String[] words = tokenizer.tokenize(rawText);
         String[] tags = tagger.tag(words);
 
         // only if timestamp exists will it tag the words
@@ -185,19 +185,5 @@ public class Tweet {
         }
         
         return "";
-    }
-
-    private String[] filter(String[] rawWords) {
-        String[] newWords = new String[rawWords.length];
-        
-        for (int i = 0; i < rawWords.length; i++) {
-            if(!rawWords[i].startsWith("#") && !rawWords[i].startsWith("http://") && !rawWords[i].startsWith("@")) {
-                newWords[i] = rawWords[i].replaceAll("\\p{P}", "");
-            } else {
-                newWords[i] = rawWords[i];
-            }
-        }
-        
-        return newWords;
     }
 }

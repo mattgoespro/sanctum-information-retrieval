@@ -30,7 +30,7 @@ public class Configuration {
     
     public static final String POS_LEARNING_MODEL = "Parts-of-speech learning model", INDEXING_TOKEN_BLACKLIST = "Indexing token blacklist", 
             DATA_DIRECTORY = "Twitter data directory", INDEXING_INCLUDE_HASHTAGS = "Include hashtags", INDEXING_INCLUDE_MENTIONS = "Include mentions",
-            INDEXING_INCLUDE_LINKS = "Include links", INDEX_SAVE_DIRECTORY = "Inverted file save directory";
+            INDEXING_INCLUDE_LINKS = "Include links", INDEX_SAVE_DIRECTORY = "Inverted file save directory", TOKENIZER_MODEL = "Tokenizer model";
     private static final HashMap<String, String> CONF_STRINGS = new HashMap(); 
     
     /**
@@ -60,6 +60,7 @@ public class Configuration {
                     else if(line.startsWith(Configuration.INDEXING_INCLUDE_MENTIONS)) Configuration.CONF_STRINGS.put(Configuration.INDEXING_INCLUDE_LINKS, value);
                     else if(line.startsWith(Configuration.INDEXING_INCLUDE_LINKS)) Configuration.CONF_STRINGS.put(Configuration.INDEXING_INCLUDE_LINKS, value);
                     else if(line.startsWith(Configuration.INDEX_SAVE_DIRECTORY)) Configuration.CONF_STRINGS.put(Configuration.INDEX_SAVE_DIRECTORY, value);
+                    else if(line.startsWith(Configuration.TOKENIZER_MODEL)) Configuration.CONF_STRINGS.put(Configuration.TOKENIZER_MODEL, value);
                     else return false;
                 }
                 

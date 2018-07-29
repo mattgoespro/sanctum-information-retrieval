@@ -73,7 +73,7 @@ public class ThreadedDataLoader extends DataLoader {
                     continue;
                 }
 
-                int tweetsPerThread = (int) Math.ceil(numLines / this.threadsPerFile);
+                int tweetsPerThread = (int) Math.ceil((double)numLines / (double)this.threadsPerFile);
 
                 // ensure there are always more tweets than threads
                 if (tweetsPerThread >= 1) {
