@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package com.sanctum.driver;
+
 
 import com.sanctum.ir.Configuration;
 import com.sanctum.ir.ThreadedDataLoader;
@@ -21,11 +21,11 @@ public class Main {
     public static void main(String[] args) {
         ThreadedDataLoader loader = new ThreadedDataLoader(5);
         boolean config = Configuration.loadConfiguration("config.cfg");
-        MapReducer mapred = new MapReducer();
+        MapReducer reducer = new MapReducer();
         
         if (config) {
             loader.loadData();
-            mapred.mapreduce(loader);
+            reducer.mapreduce(loader);
         } else {
             System.out.println("Failed to load config.");
         }

@@ -18,7 +18,9 @@
 package com.sanctum.ir;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -67,13 +69,13 @@ public class ThreadedDataLoader extends DataLoader {
         for (String path : filePaths) {
             try {
                 int numLines = (int) Math.ceil(TweetLoader.fileSize(path));
-                
+
                 // skip empty files
                 if (numLines == 0) {
                     continue;
                 }
 
-                int tweetsPerThread = (int) Math.ceil((double)numLines / (double)this.threadsPerFile);
+                int tweetsPerThread = (int) Math.ceil((double) numLines / (double) this.threadsPerFile);
 
                 // ensure there are always more tweets than threads
                 if (tweetsPerThread >= 1) {
@@ -112,14 +114,27 @@ public class ThreadedDataLoader extends DataLoader {
 
         return done;
     }
-    
+
     public ArrayList<Tweet[]> getLoadedData() {
         ArrayList<Tweet[]> data = new ArrayList();
-        
+
         for (TweetLoaderThread thread : this.threads) {
             data.add(thread.getLoader().getTweets());
         }
-        
+
         return data;
+    }
+
+    public void writeTweets(String fileName) throws IOException {
+        PrintWriter writer = new PrintWriter(new FileWriter(new File(fileName)));
+
+        for (Tweet[] tweets : getLoadedData()) {
+            for (int i = 0; i < tweets.length; i++) {
+                if (tweets[i] != null) {
+                    writer.println(tweets[i].toString());
+                    writer.flush();
+                }
+            }
+        }
     }
 }

@@ -99,7 +99,7 @@ public class Tweet {
             // retrieve links
             if (filter.includesLinks()) {
                 for (int i = 7; i < words.length; i++) {
-                    if (words[i].startsWith("http://")) {
+                    if (words[i].startsWith("://")) {
                         this.links.add(words[i]);
                     }
                 }
@@ -180,10 +180,13 @@ public class Tweet {
 
     @Override
     public String toString() {
-        if(this.wordTags != null) {
-            return this.wordTags.toString();
+        String words = "";
+        
+        for(Object w : wordTags.keySet()) {
+            words += w.toString() + " ";
         }
         
-        return "";
+        words += this.containedFile;
+        return words;
     }
 }
