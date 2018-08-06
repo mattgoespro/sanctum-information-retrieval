@@ -32,8 +32,8 @@ import java.util.logging.Logger;
  */
 public class ThreadedDataLoader extends DataLoader {
 
-    private int threadsPerFile;
-    private ArrayList<TweetLoaderThread> threads;
+    private final int threadsPerFile;
+    private final ArrayList<TweetLoaderThread> threads;
 
     /**
      * Constructor
@@ -114,7 +114,11 @@ public class ThreadedDataLoader extends DataLoader {
 
         return done;
     }
-
+    
+    /**
+     * Returns all loaded Tweets.
+     * @return 
+     */
     public ArrayList<Tweet[]> getLoadedData() {
         ArrayList<Tweet[]> data = new ArrayList();
 
@@ -124,7 +128,12 @@ public class ThreadedDataLoader extends DataLoader {
 
         return data;
     }
-
+    
+    /**
+     * Test method. Writes all filtered Tweets to a file.
+     * @param fileName
+     * @throws IOException 
+     */
     public void writeTweets(String fileName) throws IOException {
         PrintWriter writer = new PrintWriter(new FileWriter(new File(fileName)));
 

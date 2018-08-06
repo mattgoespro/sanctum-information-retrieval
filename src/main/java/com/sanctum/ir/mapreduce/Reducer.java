@@ -17,63 +17,114 @@
  */
 package com.sanctum.ir.mapreduce;
 
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.SortedSet;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
+enum IndexType {
+    SINGLE_FILE, DISTRIBUTED
+}
+
 /**
  * Class for reducing a list of keys and values to a single value
+ *
  * @author Matt
  */
 public class Reducer extends Thread {
-    
-    private ArrayList<HashMap> mappings;
-    private HashMap<String, String> reducedPairs;
-    private String outFile;
-    
+
+    private final ArrayList<HashMap> mappings;
+    private final HashMap<String, String> reducedPairs;
+    private final String outFile;
+    private final IndexType type;
+
     /**
      * Constructor
-     * @param mappings 
-     * @param outFile 
+     *
+     * @param mappings
+     * @param type
+     * @param outFile
      */
-    public Reducer(ArrayList<HashMap> mappings, String outFile) {
+    public Reducer(ArrayList<HashMap> mappings, IndexType type, String outFile) {
         this.mappings = mappings;
         this.reducedPairs = new HashMap();
         this.outFile = outFile;
+        this.type = type;
     }
-    
+
     @Override
     public void run() {
         for (HashMap m : mappings) {
             for (Object k : m.keySet()) {
                 String key = (String) k;
-                
-                if(reducedPairs.containsKey(key)) {
+
+                if (reducedPairs.containsKey(key)) {
                     reducedPairs.put(key, reducedPairs.get(key) + "; " + m.get(k).toString());
                 } else {
                     reducedPairs.put(key, m.get(k).toString());
                 }
             }
         }
-        
-        try {
-            writeIndex();
-        } catch (IOException ex) {
-            Logger.getLogger(Reducer.class.getName()).log(Level.SEVERE, null, ex);
+
+        switch (type) {
+            case SINGLE_FILE: {
+                try {
+                    writeSingleIndex();
+                } catch (IOException ex) {
+                    Logger.getLogger(Reducer.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
+
+            case DISTRIBUTED: {
+                try {
+                    writeDistributedIndex();
+                } catch (IOException ex) {
+                    Logger.getLogger(Reducer.class.getName()).log(Level.SEVERE, null, ex);
+                }
+            }
         }
     }
 
-    private void writeIndex() throws IOException {
+    /**
+     * Writes the indices to a file.
+     *
+     * @throws IOException
+     */
+    private void writeSingleIndex() throws IOException {
         PrintWriter writer = new PrintWriter(new FileWriter(new File(this.outFile)));
-        
-        for (Object key : this.reducedPairs.keySet()) {
-            writer.println(key.toString() + " " + reducedPairs.get(key));
-            writer.flush();
+
+        synchronized (this) {
+            for (Object key : this.reducedPairs.keySet()) {
+                writer.println(key.toString() + " " + reducedPairs.get(key));
+                writer.flush();
+            }
         }
     }
+
+    private synchronized void writeDistributedIndex() throws IOException {
+        File indexFolder = new File("index/");
+        indexFolder.mkdir();
+        SortedSet<String> keys = new TreeSet<>(reducedPairs.keySet());
+        String prevKey = "";
+        PrintWriter writer;
+
+        for (String key : keys) {
+            String fileIndex = key.toLowerCase().charAt(0) + "";
+            File indexFile = new File("index/index_" + fileIndex + ".txt");
+
+            writer = new PrintWriter(new BufferedWriter(new FileWriter(indexFile, true)));
+
+            writer.println(key + " " + reducedPairs.get(key));
+            writer.flush();
+            prevKey = fileIndex;
+        }
+    }
+
 }

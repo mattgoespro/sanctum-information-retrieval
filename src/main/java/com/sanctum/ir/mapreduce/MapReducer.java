@@ -22,6 +22,8 @@ import com.sanctum.ir.ThreadedDataLoader;
 import com.sanctum.ir.Tweet;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Queue;
 
 /**
  * Naive threaded MapReduce implementation
@@ -29,44 +31,72 @@ import java.util.HashMap;
  */
 public class MapReducer {
     
-    private ArrayList<Mapper> mappers;
+    private final ArrayList<Mapper> mappers;
+    private final ArrayList<Reducer> reducers;
+    private final Queue<Mapper> mapperQueue;
     
     /**
      * Constructor
      */
     public MapReducer() {
         this.mappers = new ArrayList();
+        this.reducers = new ArrayList();
+        this.mapperQueue = new LinkedList();
     }
     
+    /**
+     * Perform MapReduce indexing on the data
+     * @param loader 
+     */
     public void mapreduce(ThreadedDataLoader loader) {
         ArrayList<Tweet[]> data = loader.getLoadedData();
+        createMappers(data);
         
+        while(!mappers.isEmpty() || !mapperQueue.isEmpty()) {
+            // if all mappers done and 1 mapper in queue
+            if(mappers.isEmpty() && mapperQueue.size() == 1) {
+                ArrayList<HashMap> mappings = new ArrayList();
+                mappings.add(mapperQueue.poll().getPairs());
+                Reducer r = new Reducer(mappings, IndexType.DISTRIBUTED, Configuration.get(Configuration.INDEX_SAVE_DIRECTORY));
+                reducers.add(r);
+                r.start();
+            }
+            
+            // if 2 mappers in queue, create reducer
+            if(mapperQueue.size() >= 2) {
+                ArrayList<HashMap> mappings = new ArrayList();
+                mappings.add(mapperQueue.poll().getPairs());
+                mappings.add(mapperQueue.poll().getPairs());
+                Reducer r = new Reducer(mappings, IndexType.DISTRIBUTED, Configuration.get(Configuration.INDEX_SAVE_DIRECTORY));
+                reducers.add(r);
+                r.start();
+            }
+            
+            checkMappers();
+        }
+    }
+    
+    /**
+     * Creates the mappers for the parsed data.
+     * @param data 
+     */
+    private void createMappers(ArrayList<Tweet[]> data) {
         for (int i = 0; i < data.size(); i++) {
             Mapper m = new Mapper(data.get(i));
             mappers.add(m);
             m.start();
         }
-        
-        while(!doneMapping()) {
-            // wait   
-        }
-        
-        ArrayList<HashMap> mappings = new ArrayList();
-        for (Mapper m : mappers) {
-            mappings.add(m.getPairs());
-        }
-        
-        Reducer r = new Reducer(mappings, Configuration.get(Configuration.INDEX_SAVE_DIRECTORY));
-        r.start();
     }
     
-    private boolean doneMapping() {
-        boolean done = true;
-        
-        for (Mapper m : this.mappers) {
-            done &= m.done;
+    /**
+     * Check if there is a mapper ready to be reduced.
+     */
+    private void checkMappers() {
+        for (int i = 0; i < mappers.size(); i++) {
+            if(mappers.get(i).done) {
+                this.mapperQueue.add(mappers.remove(i));
+                break;
+            }
         }
-        
-        return done;
     }
 }

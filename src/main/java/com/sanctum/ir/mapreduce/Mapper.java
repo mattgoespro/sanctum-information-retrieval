@@ -57,6 +57,10 @@ public class Mapper extends Thread {
         this.done = true;
     }
     
+    /**
+     * Returns the word and containing file pair keys.
+     * @return HashMap
+     */
     public HashMap getPairs() {
         return this.pairs;
     }
