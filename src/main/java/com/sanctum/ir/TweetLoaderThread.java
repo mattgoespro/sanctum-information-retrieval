@@ -47,7 +47,7 @@ public class TweetLoaderThread extends Thread {
     
     @Override
     public void run() {
-        System.out.println("Starting thread " + this.fileName + "_" + this.id);
+        //System.out.println("Starting thread " + this.fileName + "_" + this.id);
         try {
             this.loader.readTweets();
             this.done = true;

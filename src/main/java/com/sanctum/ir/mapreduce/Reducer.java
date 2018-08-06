@@ -17,21 +17,12 @@
  */
 package com.sanctum.ir.mapreduce;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.SortedSet;
-import java.util.TreeSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
-enum IndexType {
-    SINGLE_FILE, DISTRIBUTED
-}
 
 /**
  * Class for reducing a list of keys and values to a single value
@@ -43,20 +34,18 @@ public class Reducer extends Thread {
     private final ArrayList<HashMap> mappings;
     private final HashMap<String, String> reducedPairs;
     private final String outFile;
-    private final IndexType type;
+    public volatile boolean done = false;
 
     /**
      * Constructor
      *
      * @param mappings
-     * @param type
      * @param outFile
      */
-    public Reducer(ArrayList<HashMap> mappings, IndexType type, String outFile) {
+    public Reducer(ArrayList<HashMap> mappings, String outFile) {
         this.mappings = mappings;
         this.reducedPairs = new HashMap();
         this.outFile = outFile;
-        this.type = type;
     }
 
     @Override
@@ -64,7 +53,7 @@ public class Reducer extends Thread {
         for (HashMap m : mappings) {
             for (Object k : m.keySet()) {
                 String key = (String) k;
-
+                
                 if (reducedPairs.containsKey(key)) {
                     reducedPairs.put(key, reducedPairs.get(key) + "; " + m.get(k).toString());
                 } else {
@@ -72,24 +61,8 @@ public class Reducer extends Thread {
                 }
             }
         }
-
-        switch (type) {
-            case SINGLE_FILE: {
-                try {
-                    writeSingleIndex();
-                } catch (IOException ex) {
-                    Logger.getLogger(Reducer.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-
-            case DISTRIBUTED: {
-                try {
-                    writeDistributedIndex();
-                } catch (IOException ex) {
-                    Logger.getLogger(Reducer.class.getName()).log(Level.SEVERE, null, ex);
-                }
-            }
-        }
+        
+        done = true;
     }
 
     /**
@@ -107,24 +80,12 @@ public class Reducer extends Thread {
             }
         }
     }
-
-    private synchronized void writeDistributedIndex() throws IOException {
-        File indexFolder = new File("index/");
-        indexFolder.mkdir();
-        SortedSet<String> keys = new TreeSet<>(reducedPairs.keySet());
-        String prevKey = "";
-        PrintWriter writer;
-
-        for (String key : keys) {
-            String fileIndex = key.toLowerCase().charAt(0) + "";
-            File indexFile = new File("index/index_" + fileIndex + ".txt");
-
-            writer = new PrintWriter(new BufferedWriter(new FileWriter(indexFile, true)));
-
-            writer.println(key + " " + reducedPairs.get(key));
-            writer.flush();
-            prevKey = fileIndex;
-        }
+    
+    /**
+     * Returns the result of the reduction.
+     * @return HashMap
+     */
+    public HashMap<String, String> getReducedPairs() {
+        return this.reducedPairs;
     }
-
 }

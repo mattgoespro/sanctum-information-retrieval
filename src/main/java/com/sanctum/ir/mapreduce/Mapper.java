@@ -51,7 +51,7 @@ public class Mapper extends Thread {
             if(words == null) return;
             for (Object k : words.keySet()) {
                 String key = (String) k;
-                pairs.put(key, tweets[0].getContainingFileName());
+                pairs.put(key, t.getContainingFileName() + "(" + t.getTweetIndex() + ")");
             }
         }
         this.done = true;

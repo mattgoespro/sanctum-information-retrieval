@@ -20,10 +20,17 @@ package com.sanctum.ir.mapreduce;
 import com.sanctum.ir.Configuration;
 import com.sanctum.ir.ThreadedDataLoader;
 import com.sanctum.ir.Tweet;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Queue;
+import java.util.SortedSet;
+import java.util.TreeSet;
 
 /**
  * Naive threaded MapReduce implementation
@@ -57,7 +64,7 @@ public class MapReducer {
             if(mappers.isEmpty() && mapperQueue.size() == 1) {
                 ArrayList<HashMap> mappings = new ArrayList();
                 mappings.add(mapperQueue.poll().getPairs());
-                Reducer r = new Reducer(mappings, IndexType.DISTRIBUTED, Configuration.get(Configuration.INDEX_SAVE_DIRECTORY));
+                Reducer r = new Reducer(mappings, Configuration.get(Configuration.INDEX_SAVE_DIRECTORY));
                 reducers.add(r);
                 r.start();
             }
@@ -67,7 +74,7 @@ public class MapReducer {
                 ArrayList<HashMap> mappings = new ArrayList();
                 mappings.add(mapperQueue.poll().getPairs());
                 mappings.add(mapperQueue.poll().getPairs());
-                Reducer r = new Reducer(mappings, IndexType.DISTRIBUTED, Configuration.get(Configuration.INDEX_SAVE_DIRECTORY));
+                Reducer r = new Reducer(mappings, Configuration.get(Configuration.INDEX_SAVE_DIRECTORY));
                 reducers.add(r);
                 r.start();
             }
@@ -77,7 +84,7 @@ public class MapReducer {
     }
     
     /**
-     * Creates the mappers for the parsed data.
+     * Creates the Mappers for the parsed data.
      * @param data 
      */
     private void createMappers(ArrayList<Tweet[]> data) {
@@ -99,4 +106,74 @@ public class MapReducer {
             }
         }
     }
+    
+    /**
+     * Merges all reducer results and writes them to an index.
+     * @throws IOException 
+     */
+    public void merge() throws IOException {
+        ArrayList<HashMap> mappings = new ArrayList();
+        HashMap<String, String> finalMap = new HashMap();
+        
+        
+        while(!doneReducing()) {
+            // wait
+        }
+        
+        // get all mappings
+        for (Reducer r : this.reducers) {
+            mappings.add(r.getReducedPairs());
+        }
+        
+        // update mappings
+        for (HashMap m : mappings) {
+            for (Object k : m.keySet()) {
+                String key = (String) k;
+                
+                if (finalMap.containsKey(key)) {
+                    finalMap.put(key, finalMap.get(key) + "; " + m.get(k).toString());
+                } else {
+                    finalMap.put(key, m.get(k).toString());
+                }
+            }
+        }
+        
+        writeIndex(finalMap);
+    }
+    
+    /**
+     * Checks if all reducers have finished processing.
+     * @return boolean
+     */
+    private boolean doneReducing() {
+        boolean done = true;
+        
+        for (Reducer r : this.reducers) {
+            done &= r.done;
+        }
+        return done;
+    }
+    
+    /**
+     * Writes the final word index.
+     * @param finalMap
+     * @throws IOException 
+     */
+    private void writeIndex(HashMap<String, String> finalMap) throws IOException {
+        File indexFolder = new File("index/");
+        indexFolder.mkdir();
+        SortedSet<String> keys = new TreeSet<>(finalMap.keySet());
+        PrintWriter writer;
+
+        for (String key : keys) {
+            String fileIndex = key.toLowerCase().charAt(0) + "";
+            File indexFile = new File("index/index_" + fileIndex + ".txt");
+
+            writer = new PrintWriter(new BufferedWriter(new FileWriter(indexFile, true)));
+
+            writer.println(key + "; " + finalMap.get(key));
+            writer.flush();
+        }
+    }
+    
 }

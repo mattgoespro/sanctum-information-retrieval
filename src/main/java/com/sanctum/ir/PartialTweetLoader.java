@@ -74,12 +74,11 @@ public class PartialTweetLoader extends TweetLoader {
                 continue;
             }
             
-            this.tweets[count] = new Tweet(this.fileName, count, line);
+            this.tweets[count] = new Tweet(this.fileName, currLine, line);
             try {
                 this.tweets[count].tagText(posTagger, tokenizer);
             } catch (Exception e) {}
 
-            System.out.println(this.tweets[count]);
             ++count;
             if (currLine == endLine) {
                 break;
