@@ -26,31 +26,40 @@ import java.util.logging.Logger;
 
 /**
  * Class used to retrieve Tweets from the index.
+ *
  * @author Matt
  */
 public class SearchIndex {
-    
+
     /**
      * Returns all Tweets containing a specific term.
+     *
      * @param term
      * @return ArrayList
      */
     public static ArrayList<String> search(String term) {
         ArrayList<String> result = new ArrayList();
-        String[] documents = documents(term).split("; ");
-        System.out.println(documents.length-1 + " documents found.");
-        
-        for (int i = 1; i < documents.length; i++) {
-            String doc = documents[i].substring(0, documents[i].indexOf("("));
-            int line = Integer.parseInt(documents[i].substring(documents[i].indexOf("(") + 1, documents[i].indexOf(")")));
-            System.out.println("Looking in document " + doc + " at line " + line);
-            result.add(getTweet(doc, line));
+        String docs = documents(term);
+
+        if (docs != null) {
+            String[] documents = docs.split("; ");
+
+            System.out.println(documents.length + " documents found.");
+
+            for (int i = 0; i < documents.length; i++) {
+                String doc = documents[i].substring(0, documents[i].indexOf("("));
+                int line = Integer.parseInt(documents[i].substring(documents[i].indexOf("(") + 1, documents[i].indexOf(")")));
+                System.out.println("Looking in document " + doc + " at line " + line);
+                result.add(getTweet(doc, line));
+            }
         }
+
         return result;
     }
-    
+
     /**
      * Returns the Tweet text for a document on a specific line.
+     *
      * @param doc
      * @param line
      * @return String
@@ -59,9 +68,9 @@ public class SearchIndex {
         try {
             Scanner scFile = new Scanner(new File(doc));
             int currLine = 0;
-            
-            while(scFile.hasNextLine()) {
-                if(currLine == line) {
+
+            while (scFile.hasNextLine()) {
+                if (currLine == line) {
                     return scFile.nextLine();
                 }
                 scFile.nextLine();
@@ -73,36 +82,35 @@ public class SearchIndex {
         System.out.println("none");
         return null;
     }
-    
+
     /**
      * Returns a list of documents for a term as a string.
+     *
      * @param term
      * @return String
      */
     private static String documents(String term) {
-        String result = null;
-        System.out.println("Checking index/index_" + term.charAt(0) + ".txt");
-        File ind = new File("index/index_" + term.charAt(0) + ".txt");
-        
-        if(!ind.exists()) {
-             System.out.println("No index found for term '" + term + "'");
-             return null;
+        System.out.println("Checking " + Configuration.INDEX_SAVE_DIRECTORY + term.charAt(0) + "/" + term + ".txt");
+        File ind = new File(Configuration.INDEX_SAVE_DIRECTORY + term.charAt(0) + "/" + term + ".txt");
+
+        if (!ind.exists()) {
+            System.out.println("No index found for term '" + term + "'");
+            return null;
         }
-        
+
         try {
             Scanner scFile = new Scanner(ind);
-            
-            while(scFile.hasNextLine()) {
-                String line = scFile.nextLine();
-                
-                if(line.split("; ")[0].equalsIgnoreCase(term)) {
-                    return line;
-                }
+            String docs = "";
+
+            while (scFile.hasNextLine()) {
+                docs += scFile.nextLine();
             }
+
+            return docs;
         } catch (FileNotFoundException ex) {
             Logger.getLogger(SearchIndex.class.getName()).log(Level.SEVERE, null, ex);
         }
-        
-        return result;
+
+        return null;
     }
 }

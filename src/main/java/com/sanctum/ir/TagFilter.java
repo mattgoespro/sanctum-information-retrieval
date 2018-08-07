@@ -35,7 +35,7 @@ public class TagFilter {
     private ArrayList<String> tagValueBlacklist;
     private ArrayList<String> tagPosBlacklist;
     private boolean inclMentions, inclHashtags, inclLinks;
-    private List<String> punctuation = Arrays.asList("!", "[", "]", "{", "}", ".", ",", "?", "/", "\\", "|", "(", ")", "@", "#", "$", "%", "^", "&", "*", "_", "-", "+", "=", "`", "~", "<", ">", ":", ";", "'", "\"");
+    private final List<String> punctuation = Arrays.asList("!", "[", "]", "{", "}", ".", ",", "?", "/", "\\", "|", "(", ")", "@", "#", "$", "%", "^", "&", "*", "_", "-", "+", "=", "`", "~", "<", ">", ":", ";", "'", "\"");
     
     /**
      * Constructor
@@ -133,7 +133,7 @@ public class TagFilter {
         HashMap<String, String> wordTags = new HashMap();
 
         // store word and tags in hashmap
-        for (int i = 7; i < words.length; i++) {
+        for (int i = 0; i < words.length; i++) {
             // ignore words with a specific part-of-speech
             if(this.tagPosBlacklist.contains(tags[i])) continue;
             

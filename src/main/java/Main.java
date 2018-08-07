@@ -8,6 +8,7 @@
 import com.sanctum.ir.Configuration;
 import com.sanctum.ir.ThreadedDataLoader;
 import com.sanctum.ir.mapreduce.MapReducer;
+import java.io.IOException;
 
 /**
  *
@@ -17,8 +18,9 @@ public class Main {
 
     /**
      * @param args the command line arguments
+     * @throws java.io.IOException
      */
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         ThreadedDataLoader loader = new ThreadedDataLoader(5);
         boolean config = Configuration.loadConfiguration("config.cfg");
         MapReducer reducer = new MapReducer();
@@ -26,6 +28,7 @@ public class Main {
         if (config) {
             loader.loadData();
             reducer.mapreduce(loader);
+            reducer.merge();
         } else {
             System.out.println("Failed to load config.");
         }

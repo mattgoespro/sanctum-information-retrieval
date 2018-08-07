@@ -54,7 +54,7 @@ public class Reducer extends Thread {
             for (Object k : m.keySet()) {
                 String key = (String) k;
                 
-                if (reducedPairs.containsKey(key)) {
+                if (reducedPairs.containsKey(key.toLowerCase())) {
                     reducedPairs.put(key, reducedPairs.get(key) + "; " + m.get(k).toString());
                 } else {
                     reducedPairs.put(key, m.get(k).toString());
@@ -63,22 +63,6 @@ public class Reducer extends Thread {
         }
         
         done = true;
-    }
-
-    /**
-     * Writes the indices to a file.
-     *
-     * @throws IOException
-     */
-    private void writeSingleIndex() throws IOException {
-        PrintWriter writer = new PrintWriter(new FileWriter(new File(this.outFile)));
-
-        synchronized (this) {
-            for (Object key : this.reducedPairs.keySet()) {
-                writer.println(key.toString() + " " + reducedPairs.get(key));
-                writer.flush();
-            }
-        }
     }
     
     /**

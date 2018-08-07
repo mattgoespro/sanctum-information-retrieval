@@ -68,6 +68,10 @@
         <Property name="text" type="java.lang.String" value="Search..."/>
         <Property name="toolTipText" type="java.lang.String" value="Type here to search for a term"/>
       </Properties>
+      <Events>
+        <EventHandler event="focusGained" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="tweetSearchFocusGained"/>
+        <EventHandler event="focusLost" listener="java.awt.event.FocusListener" parameters="java.awt.event.FocusEvent" handler="tweetSearchFocusLost"/>
+      </Events>
     </Component>
     <Component class="javax.swing.JButton" name="btnSearch">
       <Properties>

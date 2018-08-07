@@ -31,7 +31,9 @@ import java.util.logging.Logger;
  * @author Matt
  */
 public class SanctumIR extends javax.swing.JFrame {
-
+    
+    private boolean config;
+    
     /**
      * Creates new form SanctumSearch
      */
@@ -39,6 +41,7 @@ public class SanctumIR extends javax.swing.JFrame {
         initComponents();
         super.setLocationRelativeTo(null);
         super.setResizable(false);
+        config = Configuration.loadConfiguration("config.cfg");
     }
 
     /**
@@ -67,6 +70,14 @@ public class SanctumIR extends javax.swing.JFrame {
 
         tweetSearch.setText("Search...");
         tweetSearch.setToolTipText("Type here to search for a term");
+        tweetSearch.addFocusListener(new java.awt.event.FocusAdapter() {
+            public void focusGained(java.awt.event.FocusEvent evt) {
+                tweetSearchFocusGained(evt);
+            }
+            public void focusLost(java.awt.event.FocusEvent evt) {
+                tweetSearchFocusLost(evt);
+            }
+        });
 
         btnSearch.setText("Search");
         btnSearch.addActionListener(new java.awt.event.ActionListener() {
@@ -114,8 +125,8 @@ public class SanctumIR extends javax.swing.JFrame {
     }// </editor-fold>//GEN-END:initComponents
 
     private void btnIndexActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnIndexActionPerformed
+        tweetDisplay.setText("");
         ThreadedDataLoader loader = new ThreadedDataLoader(5);
-        boolean config = Configuration.loadConfiguration("config.cfg");
         MapReducer reducer = new MapReducer();
         
         if (config) {
@@ -140,6 +151,14 @@ public class SanctumIR extends javax.swing.JFrame {
             }
         }
     }//GEN-LAST:event_btnSearchActionPerformed
+
+    private void tweetSearchFocusGained(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_tweetSearchFocusGained
+        tweetSearch.setText("");
+    }//GEN-LAST:event_tweetSearchFocusGained
+
+    private void tweetSearchFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_tweetSearchFocusLost
+        if(tweetSearch.getText().equals("") || tweetSearch == null) tweetSearch.setText("Search...");
+    }//GEN-LAST:event_tweetSearchFocusLost
 
     /**
      * @param args the command line arguments

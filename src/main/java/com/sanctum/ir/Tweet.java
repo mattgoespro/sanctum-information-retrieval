@@ -29,7 +29,7 @@ import opennlp.tools.tokenize.TokenizerME;
  * @author Matt
  */
 public class Tweet {
-    
+
     private TagFilter filter;
     private final String containedFile;
     private final int tweetIndex;
@@ -38,8 +38,6 @@ public class Tweet {
     private ArrayList<String> hashtags;
     private ArrayList<String> links;
     private HashMap<String, String> wordTags;
-    private String timeStamp;
-    
 
     /**
      * Constructor
@@ -66,42 +64,38 @@ public class Tweet {
 
     /**
      * Tags the text of the tweet with its parts of speech.
+     *
      * @param tagger
      * @param tokenizer
      */
     public void tagText(POSTaggerME tagger, TokenizerME tokenizer) {
         String[] words = tokenizer.tokenize(rawText);
         String[] tags = tagger.tag(words);
+        this.wordTags = filter.filterText(words, tags);
 
-        // only if timestamp exists will it tag the words
-        if (words[0].equals("Mon") || words[0].equals("Tue") || words[0].equals("Wed") || words[0].equals("Thu") || words[0].equals("Fri") || words[0].equals("Sat") || words[0].equals("Sun")) {
-            this.timeStamp = words[0] + " " + words[1] + " " + words[2] + " " + words[3] + " " + words[4] + " " + words[5];
-            this.wordTags = filter.filterText(words, tags);
-
-            // retrieve hashtags
-            if (filter.includesHashtags()) {
-                for (int i = 7; i < words.length; i++) {
-                    if (words[i].startsWith("#")) {
-                        this.hashtags.add(words[i]);
-                    }
+        // retrieve hashtags
+        if (filter.includesHashtags()) {
+            for (String word : words) {
+                if (word.startsWith("#")) {
+                    this.hashtags.add(word);
                 }
             }
+        }
 
-            // retrieve mentions
-            if (filter.includesMentions()) {
-                for (int i = 7; i < words.length; i++) {
-                    if (words[i].startsWith("@")) {
-                        this.mentions.add(words[i]);
-                    }
+        // retrieve mentions
+        if (filter.includesMentions()) {
+            for (String word : words) {
+                if (word.startsWith("@")) {
+                    this.mentions.add(word);
                 }
             }
+        }
 
-            // retrieve links
-            if (filter.includesLinks()) {
-                for (int i = 7; i < words.length; i++) {
-                    if (words[i].startsWith("://")) {
-                        this.links.add(words[i]);
-                    }
+        // retrieve links
+        if (filter.includesLinks()) {
+            for (String word : words) {
+                if (word.startsWith("://")) {
+                    this.links.add(word);
                 }
             }
         }
@@ -144,15 +138,6 @@ public class Tweet {
     }
 
     /**
-     * Returns the timestamp of the Tweet.
-     *
-     * @return String
-     */
-    public String getTimestamp() {
-        return this.timeStamp;
-    }
-
-    /**
      * Returns the directory of the file containing this Tweet.
      *
      * @return Strings
@@ -169,9 +154,10 @@ public class Tweet {
     public int getTweetIndex() {
         return this.tweetIndex;
     }
-    
+
     /**
      * Returns the list of filtered words and tags.
+     *
      * @return HashMap
      */
     public HashMap<String, String> getWords() {
@@ -181,11 +167,11 @@ public class Tweet {
     @Override
     public String toString() {
         String words = "";
-        
-        for(Object w : wordTags.keySet()) {
+
+        for (Object w : wordTags.keySet()) {
             words += w.toString() + " ";
         }
-        
+
         words += this.containedFile;
         return words;
     }

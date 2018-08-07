@@ -96,7 +96,7 @@ public class MapReducer {
     }
     
     /**
-     * Check if there is a mapper ready to be reduced.
+     * Checks if there is a mapper ready to be reduced and adds it to the finished-mapper queue.
      */
     private void checkMappers() {
         for (int i = 0; i < mappers.size(); i++) {
@@ -115,7 +115,7 @@ public class MapReducer {
         ArrayList<HashMap> mappings = new ArrayList();
         HashMap<String, String> finalMap = new HashMap();
         
-        
+        // wait for all reducers to finish
         while(!doneReducing()) {
             // wait
         }
@@ -160,18 +160,22 @@ public class MapReducer {
      * @throws IOException 
      */
     private void writeIndex(HashMap<String, String> finalMap) throws IOException {
-        File indexFolder = new File("index/");
+        File indexFolder = new File(Configuration.INDEX_SAVE_DIRECTORY);
         indexFolder.mkdir();
         SortedSet<String> keys = new TreeSet<>(finalMap.keySet());
         PrintWriter writer;
 
         for (String key : keys) {
-            String fileIndex = key.toLowerCase().charAt(0) + "";
-            File indexFile = new File("index/index_" + fileIndex + ".txt");
+            String f = key.toLowerCase().charAt(0) + "/";
+            File letterIndex = new File(Configuration.INDEX_SAVE_DIRECTORY + f);
+            
+            if(!letterIndex.exists()) letterIndex.mkdir();
+            
+            // file names can't contain colons
+            key = key.replaceAll(":", "");
+            writer = new PrintWriter(new BufferedWriter(new FileWriter(new File(Configuration.INDEX_SAVE_DIRECTORY + f + key.toLowerCase() + ".txt"))));
 
-            writer = new PrintWriter(new BufferedWriter(new FileWriter(indexFile, true)));
-
-            writer.println(key + "; " + finalMap.get(key));
+            writer.println(finalMap.get(key));
             writer.flush();
         }
     }
