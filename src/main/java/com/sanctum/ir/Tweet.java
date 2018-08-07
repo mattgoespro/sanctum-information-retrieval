@@ -34,6 +34,7 @@ public class Tweet {
     private final String containedFile;
     private final int tweetIndex;
     private final String rawText;
+    private String[] tokenizedRawText;
     private ArrayList<String> mentions;
     private ArrayList<String> hashtags;
     private ArrayList<String> links;
@@ -69,36 +70,9 @@ public class Tweet {
      * @param tokenizer
      */
     public void tagText(POSTaggerME tagger, TokenizerME tokenizer) {
-        String[] words = tokenizer.tokenize(rawText);
-        String[] tags = tagger.tag(words);
-        this.wordTags = filter.filterText(words, tags);
-
-        // retrieve hashtags
-        if (filter.includesHashtags()) {
-            for (String word : words) {
-                if (word.startsWith("#")) {
-                    this.hashtags.add(word);
-                }
-            }
-        }
-
-        // retrieve mentions
-        if (filter.includesMentions()) {
-            for (String word : words) {
-                if (word.startsWith("@")) {
-                    this.mentions.add(word);
-                }
-            }
-        }
-
-        // retrieve links
-        if (filter.includesLinks()) {
-            for (String word : words) {
-                if (word.startsWith("://")) {
-                    this.links.add(word);
-                }
-            }
-        }
+        tokenizedRawText = tokenizer.tokenize(rawText);
+        String[] tags = tagger.tag(tokenizedRawText);
+        this.wordTags = filter.filterText(tokenizedRawText, tags);
     }
 
     /**
@@ -107,6 +81,14 @@ public class Tweet {
      * @return String[]
      */
     public ArrayList<String> getMentions() {
+        // retrieve mentions
+        if (filter.includesMentions()) {
+            for (String word : tokenizedRawText) {
+                if (word.startsWith("@")) {
+                    this.mentions.add(word);
+                }
+            }
+        }
         return this.mentions;
     }
 
@@ -116,6 +98,14 @@ public class Tweet {
      * @return
      */
     public ArrayList<String> getHashtags() {
+        // retrieve hashtags
+        if (filter.includesHashtags()) {
+            for (String word : tokenizedRawText) {
+                if (word.startsWith("#")) {
+                    this.hashtags.add(word);
+                }
+            }
+        }
         return this.hashtags;
     }
 
@@ -125,6 +115,14 @@ public class Tweet {
      * @return
      */
     public ArrayList<String> getLinks() {
+        // retrieve links
+        if (filter.includesLinks()) {
+            for (String word : tokenizedRawText) {
+                if (word.startsWith("://")) {
+                    this.links.add(word);
+                }
+            }
+        }
         return this.links;
     }
 
