@@ -42,12 +42,12 @@ public class DataLoader {
      * Loads the tweet data from the HDFS.
      */
     public void loadData() {
-        System.out.println("Loading data from " + Configuration.get(Configuration.DATA_DIRECTORY));
+        System.out.println("Loading data from " + Configuration.DATA_DIRECTORY);
         long startTime = System.currentTimeMillis();
-        File dataFiles = new File(Configuration.get(Configuration.DATA_DIRECTORY));
+        File dataFiles = new File(Configuration.DATA_DIRECTORY);
         
         if(!dataFiles.exists()) {
-            System.out.println("Error: Unable to find directory " + Configuration.get(Configuration.DATA_DIRECTORY) + ".");
+            System.out.println("Error: Unable to find directory " + Configuration.DATA_DIRECTORY + ".");
             return;
         }
         

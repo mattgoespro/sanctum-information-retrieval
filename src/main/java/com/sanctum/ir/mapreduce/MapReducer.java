@@ -64,7 +64,7 @@ public class MapReducer {
             if(mappers.isEmpty() && mapperQueue.size() == 1) {
                 ArrayList<HashMap> mappings = new ArrayList();
                 mappings.add(mapperQueue.poll().getPairs());
-                Reducer r = new Reducer(mappings, Configuration.get(Configuration.INDEX_SAVE_DIRECTORY));
+                Reducer r = new Reducer(mappings, Configuration.INDEX_SAVE_DIRECTORY);
                 reducers.add(r);
                 r.start();
             }
@@ -74,7 +74,7 @@ public class MapReducer {
                 ArrayList<HashMap> mappings = new ArrayList();
                 mappings.add(mapperQueue.poll().getPairs());
                 mappings.add(mapperQueue.poll().getPairs());
-                Reducer r = new Reducer(mappings, Configuration.get(Configuration.INDEX_SAVE_DIRECTORY));
+                Reducer r = new Reducer(mappings, Configuration.INDEX_SAVE_DIRECTORY);
                 reducers.add(r);
                 r.start();
             }

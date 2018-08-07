@@ -28,10 +28,16 @@ import java.util.Scanner;
  */
 public class Configuration {
     
-    public static final String POS_LEARNING_MODEL = "Parts-of-speech learning model", INDEXING_TOKEN_BLACKLIST = "Indexing token blacklist", 
-            DATA_DIRECTORY = "Twitter data directory", INDEXING_INCLUDE_HASHTAGS = "Include hashtags", INDEXING_INCLUDE_MENTIONS = "Include mentions",
-            INDEXING_INCLUDE_LINKS = "Include links", INDEX_SAVE_DIRECTORY = "Inverted file save directory", TOKENIZER_MODEL = "Tokenizer model";
-    private static final HashMap<String, String> CONF_STRINGS = new HashMap(); 
+    private static final String KEY_DATA_DIRECTORY = "Twitter data directory", 
+            KEY_INDEXING_INCLUDE_HASHTAGS = "Include hashtags", 
+            KEY_INDEXING_INCLUDE_MENTIONS = "Include mentions",
+            KEY_INDEXING_INCLUDE_LINKS = "Include links", 
+            KEY_INDEX_SAVE_DIRECTORY = "Inverted file save directory";
+    public static String DATA_DIRECTORY, 
+            INDEXING_INCLUDE_HASHTAGS, 
+            INDEXING_INCLUDE_MENTIONS,
+            INDEXING_INCLUDE_LINKS, 
+            INDEX_SAVE_DIRECTORY;
     
     /**
      * Loads the configuration. Returns true if successful.
@@ -53,14 +59,11 @@ public class Configuration {
                     String value = line.replaceAll("\\s+", "");
                     value = value.substring(value.indexOf(":") + 1);
                     
-                    if(line.startsWith(Configuration.POS_LEARNING_MODEL)) Configuration.CONF_STRINGS.put(Configuration.POS_LEARNING_MODEL, value);
-                    else if(line.startsWith(Configuration.INDEXING_TOKEN_BLACKLIST)) Configuration.CONF_STRINGS.put(Configuration.INDEXING_TOKEN_BLACKLIST, value);
-                    else if(line.startsWith(Configuration.DATA_DIRECTORY)) Configuration.CONF_STRINGS.put(Configuration.DATA_DIRECTORY, value);
-                    else if(line.startsWith(Configuration.INDEXING_INCLUDE_HASHTAGS)) Configuration.CONF_STRINGS.put(Configuration.INDEXING_INCLUDE_HASHTAGS, value);
-                    else if(line.startsWith(Configuration.INDEXING_INCLUDE_MENTIONS)) Configuration.CONF_STRINGS.put(Configuration.INDEXING_INCLUDE_LINKS, value);
-                    else if(line.startsWith(Configuration.INDEXING_INCLUDE_LINKS)) Configuration.CONF_STRINGS.put(Configuration.INDEXING_INCLUDE_LINKS, value);
-                    else if(line.startsWith(Configuration.INDEX_SAVE_DIRECTORY)) Configuration.CONF_STRINGS.put(Configuration.INDEX_SAVE_DIRECTORY, value);
-                    else if(line.startsWith(Configuration.TOKENIZER_MODEL)) Configuration.CONF_STRINGS.put(Configuration.TOKENIZER_MODEL, value);
+                    if(line.startsWith(Configuration.KEY_DATA_DIRECTORY)) Configuration.DATA_DIRECTORY = value;
+                    else if(line.startsWith(Configuration.KEY_INDEXING_INCLUDE_HASHTAGS)) Configuration.INDEXING_INCLUDE_HASHTAGS = value;
+                    else if(line.startsWith(Configuration.KEY_INDEXING_INCLUDE_MENTIONS)) Configuration.INDEXING_INCLUDE_MENTIONS = value;
+                    else if(line.startsWith(Configuration.KEY_INDEXING_INCLUDE_LINKS)) Configuration.INDEXING_INCLUDE_LINKS = value;
+                    else if(line.startsWith(Configuration.KEY_INDEX_SAVE_DIRECTORY)) Configuration.INDEX_SAVE_DIRECTORY = value;
                     else return false;
                 }
                 
@@ -72,14 +75,4 @@ public class Configuration {
         
         return false;
     }
-    
-    /**
-     * Returns the configuration value specific
-     * @param confValue
-     * @return String
-     */
-    public static final String get(String confValue) {
-        return Configuration.CONF_STRINGS.get(confValue);
-    }
-    
 }

@@ -41,9 +41,9 @@ public class TagFilter {
      * Constructor
      */
     public TagFilter() {
-        this.inclMentions = Boolean.parseBoolean(Configuration.get(Configuration.INDEXING_INCLUDE_MENTIONS));
-        this.inclHashtags = Boolean.parseBoolean(Configuration.get(Configuration.INDEXING_INCLUDE_HASHTAGS));
-        this.inclLinks = Boolean.parseBoolean(Configuration.get(Configuration.INDEXING_INCLUDE_LINKS));
+        this.inclMentions = Boolean.parseBoolean(Configuration.INDEXING_INCLUDE_MENTIONS);
+        this.inclHashtags = Boolean.parseBoolean(Configuration.INDEXING_INCLUDE_HASHTAGS);
+        this.inclLinks = Boolean.parseBoolean(Configuration.INDEXING_INCLUDE_LINKS);
     }
 
     /**

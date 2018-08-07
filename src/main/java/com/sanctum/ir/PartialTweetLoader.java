@@ -61,11 +61,9 @@ public class PartialTweetLoader extends TweetLoader {
         int count = 0;
         String line;
 
-        String posModel = Configuration.get(Configuration.POS_LEARNING_MODEL);
-        POSTaggerME posTagger = new POSTaggerME(new POSModel(new File(posModel)));
-        String tokenModel = Configuration.get(Configuration.TOKENIZER_MODEL);
-        TokenizerME tokenizer = new TokenizerME(new TokenizerModel(new File(tokenModel)));
-
+        POSTaggerME posTagger = new POSTaggerME(new POSModel(new File("pos_learning_models/en-pos-maxent.bin")));
+        TokenizerME tokenizer = new TokenizerME(new TokenizerModel(new File("pos_learning_models/en-token.bin")));
+        
         while (scFile.hasNextLine()) {
             line = scFile.nextLine();
 
