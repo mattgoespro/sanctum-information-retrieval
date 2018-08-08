@@ -70,9 +70,39 @@ public class Tweet {
      * @param tokenizer
      */
     public void tagText(POSTaggerME tagger, TokenizerME tokenizer) {
-        tokenizedRawText = tokenizer.tokenize(rawText);
-        String[] tags = tagger.tag(tokenizedRawText);
-        this.wordTags = filter.filterText(tokenizedRawText, tags);
+        tokenizedRawText = rawText.split(" ");
+        ArrayList<String> words = new ArrayList();
+        
+        for (String word : tokenizedRawText) {
+            if(!word.startsWith("http")) {
+                word = word.replaceAll("\\.", " ").replaceAll("!", " ")
+                        .replaceAll("\\?", " ").replaceAll(",", " ")
+                        .replaceAll(":", " ").replaceAll("\\\\", " ")
+                        .replaceAll("\\*", " ").replaceAll("-", " ")
+                        .replaceAll("=", " ").replaceAll("&", " ")
+                        .replaceAll("\\(", " ").replaceAll("\\)", " ")
+                        .replaceAll(";", " ").replaceAll("\\+", " ")
+                        .replaceAll("\"", " ").replaceAll("/", " ")
+                        .replaceAll("\\s+", " ");
+                
+                String[] process = word.split(" ");
+                
+                for (String s : process) {
+                    if(!s.equals("")) words.add(s);
+                }
+            } else {
+                words.add(word);
+            }
+        }
+        
+        String[] fi = new String[words.size()];
+        
+        for (int i = 0; i < words.size(); i++) {
+            fi[i] = words.get(i);
+        }
+        
+        String[] tags = tagger.tag(fi);
+        this.wordTags = filter.filterText(words, tags);
     }
 
     /**

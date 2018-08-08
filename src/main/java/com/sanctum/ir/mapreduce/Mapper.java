@@ -28,8 +28,8 @@ import java.util.HashMap;
 public class Mapper extends Thread {
     
     public volatile boolean done = false;
-    private Tweet[] tweets;
-    private HashMap<String, String> pairs;
+    private final Tweet[] tweets;
+    private final HashMap<String, String> pairs;
 
     /**
      * Constructor
@@ -48,7 +48,8 @@ public class Mapper extends Thread {
             
             HashMap words = t.getWords();
             
-            if(words == null) return;
+            if(words == null) continue;
+            
             for (Object k : words.keySet()) {
                 String key = (String) k;
                 pairs.put(key, t.getContainingFileName() + "(" + t.getTweetIndex() + ")");

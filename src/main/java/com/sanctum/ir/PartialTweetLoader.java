@@ -17,7 +17,9 @@
  */
 package com.sanctum.ir;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.Scanner;
 import opennlp.tools.postag.POSModel;
@@ -54,37 +56,32 @@ public class PartialTweetLoader extends TweetLoader {
         }
 
         this.tweets = new Tweet[this.numTweets];
-        Scanner scFile = new Scanner(this.file);
+        BufferedReader scFile = new BufferedReader(new FileReader(this.file));
         int startLine = this.id * this.numTweets;
         int endLine = startLine + this.numTweets - 1;
         int currLine = 0;
         int count = 0;
-        String line;
-
         POSTaggerME posTagger = new POSTaggerME(new POSModel(new File("pos_learning_models/en-pos-maxent.bin")));
         TokenizerME tokenizer = new TokenizerME(new TokenizerModel(new File("pos_learning_models/en-token.bin")));
         
-        while (scFile.hasNextLine()) {
-            line = scFile.nextLine();
+        String line = scFile.readLine();
+        
+        while (line != null) {
+            if (currLine >= startLine) {
+                this.tweets[count] = new Tweet(this.fileName, currLine, line);
+                try {
+                    this.tweets[count].tagText(posTagger, tokenizer);
+                } catch (Exception e) {}
 
-            if (currLine < startLine) {
-                ++currLine;
-                continue;
-            }
-            
-            this.tweets[count] = new Tweet(this.fileName, currLine, line);
-            try {
-                this.tweets[count].tagText(posTagger, tokenizer);
-            } catch (Exception e) {}
-
-            ++count;
-            if (currLine == endLine) {
-                break;
+                ++count;
+                
+                if (currLine == endLine) {
+                    break;
+                }
             }
             ++currLine;
+            line = scFile.readLine();
         }
-
-        scFile.close();
     }
 
 }

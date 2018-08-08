@@ -17,10 +17,6 @@
  */
 package com.sanctum.ir.mapreduce;
 
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -33,7 +29,6 @@ public class Reducer extends Thread {
 
     private final ArrayList<HashMap> mappings;
     private final HashMap<String, String> reducedPairs;
-    private final String outFile;
     public volatile boolean done = false;
 
     /**
@@ -45,7 +40,6 @@ public class Reducer extends Thread {
     public Reducer(ArrayList<HashMap> mappings, String outFile) {
         this.mappings = mappings;
         this.reducedPairs = new HashMap();
-        this.outFile = outFile;
     }
 
     @Override

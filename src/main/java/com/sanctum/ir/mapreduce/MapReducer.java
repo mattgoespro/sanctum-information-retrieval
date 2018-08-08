@@ -34,14 +34,15 @@ import java.util.TreeSet;
 
 /**
  * Naive threaded MapReduce implementation
+ *
  * @author Matt
  */
 public class MapReducer {
-    
+
     private final ArrayList<Mapper> mappers;
     private final ArrayList<Reducer> reducers;
     private final Queue<Mapper> mapperQueue;
-    
+
     /**
      * Constructor
      */
@@ -50,27 +51,28 @@ public class MapReducer {
         this.reducers = new ArrayList();
         this.mapperQueue = new LinkedList();
     }
-    
+
     /**
      * Perform MapReduce indexing on the data
-     * @param loader 
+     *
+     * @param loader
      */
     public void mapreduce(ThreadedDataLoader loader) {
         ArrayList<Tweet[]> data = loader.getLoadedData();
         createMappers(data);
-        
-        while(!mappers.isEmpty() || !mapperQueue.isEmpty()) {
+
+        while (!mappers.isEmpty() || !mapperQueue.isEmpty()) {
             // if all mappers done and 1 mapper in queue
-            if(mappers.isEmpty() && mapperQueue.size() == 1) {
+            if (mappers.isEmpty() && mapperQueue.size() == 1) {
                 ArrayList<HashMap> mappings = new ArrayList();
                 mappings.add(mapperQueue.poll().getPairs());
                 Reducer r = new Reducer(mappings, Configuration.INDEX_SAVE_DIRECTORY);
                 reducers.add(r);
                 r.start();
             }
-            
+
             // if 2 mappers in queue, create reducer
-            if(mapperQueue.size() >= 2) {
+            if (mapperQueue.size() >= 2) {
                 ArrayList<HashMap> mappings = new ArrayList();
                 mappings.add(mapperQueue.poll().getPairs());
                 mappings.add(mapperQueue.poll().getPairs());
@@ -78,14 +80,15 @@ public class MapReducer {
                 reducers.add(r);
                 r.start();
             }
-            
+
             checkMappers();
         }
     }
-    
+
     /**
      * Creates the Mappers for the parsed data.
-     * @param data 
+     *
+     * @param data
      */
     private void createMappers(ArrayList<Tweet[]> data) {
         for (int i = 0; i < data.size(); i++) {
@@ -94,42 +97,44 @@ public class MapReducer {
             m.start();
         }
     }
-    
+
     /**
-     * Checks if there is a mapper ready to be reduced and adds it to the finished-mapper queue.
+     * Checks if there is a mapper ready to be reduced and adds it to the
+     * finished-mapper queue.
      */
     private void checkMappers() {
         for (int i = 0; i < mappers.size(); i++) {
-            if(mappers.get(i).done) {
+            if (mappers.get(i).done) {
                 this.mapperQueue.add(mappers.remove(i));
                 break;
             }
         }
     }
-    
+
     /**
      * Merges all reducer results and writes them to an index.
-     * @throws IOException 
+     *
+     * @throws IOException
      */
     public void merge() throws IOException {
         ArrayList<HashMap> mappings = new ArrayList();
         HashMap<String, String> finalMap = new HashMap();
-        
+
         // wait for all reducers to finish
-        while(!doneReducing()) {
+        while (!doneReducing()) {
             // wait
         }
-        
+
         // get all mappings
         for (Reducer r : this.reducers) {
             mappings.add(r.getReducedPairs());
         }
-        
+
         // update mappings
         for (HashMap m : mappings) {
             for (Object k : m.keySet()) {
                 String key = (String) k;
-                
+
                 if (finalMap.containsKey(key)) {
                     finalMap.put(key, finalMap.get(key) + "; " + m.get(k).toString());
                 } else {
@@ -137,29 +142,32 @@ public class MapReducer {
                 }
             }
         }
-        
+
         writeIndex(finalMap);
     }
-    
+
     /**
      * Checks if all reducers have finished processing.
+     *
      * @return boolean
      */
     private boolean doneReducing() {
         boolean done = true;
-        
+
         for (Reducer r : this.reducers) {
             done &= r.done;
         }
         return done;
     }
-    
+
     /**
      * Writes the final word index.
+     *
      * @param finalMap
-     * @throws IOException 
+     * @throws IOException
      */
     private void writeIndex(HashMap<String, String> finalMap) throws IOException {
+        System.out.println("Writing results...");
         File indexFolder = new File(Configuration.INDEX_SAVE_DIRECTORY);
         indexFolder.mkdir();
         SortedSet<String> keys = new TreeSet<>(finalMap.keySet());
@@ -168,16 +176,19 @@ public class MapReducer {
         for (String key : keys) {
             String f = key.toLowerCase().charAt(0) + "/";
             File letterIndex = new File(Configuration.INDEX_SAVE_DIRECTORY + f);
-            
-            if(!letterIndex.exists()) letterIndex.mkdir();
-            
-            // file names can't contain colons
-            key = key.replaceAll(":", "");
-            writer = new PrintWriter(new BufferedWriter(new FileWriter(new File(Configuration.INDEX_SAVE_DIRECTORY + f + key.toLowerCase() + ".txt"))));
 
-            writer.println(finalMap.get(key));
-            writer.flush();
+            if (!letterIndex.exists()) {
+                letterIndex.mkdir();
+            }
+
+            try {
+                writer = new PrintWriter(new BufferedWriter(new FileWriter(new File(Configuration.INDEX_SAVE_DIRECTORY + f + key.toLowerCase() + ".txt"))));
+                writer.println(finalMap.get(key));
+                writer.flush();
+            } catch (Exception e) {}
+
         }
+        System.out.println("Writing complete.");
     }
-    
+
 }
