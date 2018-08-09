@@ -17,9 +17,13 @@
  */
 package com.sanctum.ir;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -48,9 +52,15 @@ public class SearchIndex {
 
             for (int i = 0; i < documents.length; i++) {
                 String doc = documents[i].substring(0, documents[i].indexOf("("));
-                int line = Integer.parseInt(documents[i].substring(documents[i].indexOf("(") + 1, documents[i].indexOf(")")));
-                System.out.println("Looking in document " + doc + " at line " + line);
-                result.add(getTweet(doc, line));
+                String[] lines = documents[i].substring(documents[i].indexOf("(") + 1, documents[i].indexOf(")")).split(", ");
+                
+                try {
+                    for (String t : getTweet(doc, lines)) {
+                        result.add(t);
+                    }
+                } catch (IOException ex) {
+                    Logger.getLogger(SearchIndex.class.getName()).log(Level.SEVERE, null, ex);
+                }
             }
         }
 
@@ -64,22 +74,32 @@ public class SearchIndex {
      * @param line
      * @return String
      */
-    private static String getTweet(String doc, int line) {
+    private static ArrayList<String> getTweet(String doc, String[] lines) throws IOException {
         try {
-            Scanner scFile = new Scanner(new File(doc));
-            int currLine = 0;
-
-            while (scFile.hasNextLine()) {
-                if (currLine == line) {
-                    return scFile.nextLine();
+            BufferedReader scFile = new BufferedReader(new FileReader(new File(doc)));
+            Arrays.sort(lines);
+            int currLine = 0, stopIndex = 0;
+            int nextStop = Integer.parseInt(lines[0]);
+            ArrayList<String> retrieved = new ArrayList();
+            String l = scFile.readLine();
+            
+            while (l != null) {
+                if (currLine == nextStop) {
+                    retrieved.add(l);
+                    ++stopIndex;
+                    
+                    if(stopIndex == lines.length) break;
+                    
+                    nextStop = Integer.parseInt(lines[stopIndex]);
                 }
-                scFile.nextLine();
+                l = scFile.readLine();
                 ++currLine;
             }
+            
+            return retrieved;
         } catch (FileNotFoundException ex) {
             Logger.getLogger(SearchIndex.class.getName()).log(Level.SEVERE, null, ex);
         }
-        System.out.println("none");
         return null;
     }
 

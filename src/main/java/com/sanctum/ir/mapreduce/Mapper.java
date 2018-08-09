@@ -52,7 +52,12 @@ public class Mapper extends Thread {
             
             for (Object k : words.keySet()) {
                 String key = (String) k;
-                pairs.put(key, t.getContainingFileName() + "(" + t.getTweetIndex() + ")");
+                
+                if(pairs.containsKey(key)) {
+                    pairs.put(key, t.getContainingFileName() + "(" + pairs.get(key).substring(pairs.get(key).indexOf("(") + 1, pairs.get(key).indexOf(")")) + ", " + t.getTweetIndex() + ")");
+                } else {
+                    pairs.put(key, t.getContainingFileName() + "(" + t.getTweetIndex() + ")");
+                }
             }
         }
         this.done = true;
