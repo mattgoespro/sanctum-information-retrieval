@@ -64,7 +64,7 @@ public class TweetLoader {
         while (line != null) {
             if (!line.equals("")) {
                 this.tweets[count] = new Tweet(this.fileName, count, line);
-                this.tweets[count].tagText(posTagger, tokenizer);
+                this.tweets[count].filter();
                 ++count;
             }
             line = fileReader.readLine();

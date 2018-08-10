@@ -60,8 +60,8 @@ public class PartialTweetLoader extends TweetLoader {
         int endLine = startLine + this.numTweets - 1;
         int currLine = 0;
         int count = 0;
-        POSTaggerME posTagger = new POSTaggerME(new POSModel(new File("pos_learning_models/en-pos-maxent.bin")));
-        TokenizerME tokenizer = new TokenizerME(new TokenizerModel(new File("pos_learning_models/en-token.bin")));
+        //POSTaggerME posTagger = new POSTaggerME(new POSModel(new File("pos_learning_models/en-pos-maxent.bin")));
+        //TokenizerME tokenizer = new TokenizerME(new TokenizerModel(new File("pos_learning_models/en-token.bin")));
         
         String line = scFile.readLine();
         
@@ -69,7 +69,7 @@ public class PartialTweetLoader extends TweetLoader {
             if (currLine >= startLine) {
                 this.tweets[count] = new Tweet(this.fileName, currLine, line);
                 try {
-                    this.tweets[count].tagText(posTagger, tokenizer);
+                    this.tweets[count].filter();
                     //System.out.println(this.tweets[count]);
                 } catch (Exception e) {}
 

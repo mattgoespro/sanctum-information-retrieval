@@ -18,6 +18,7 @@
 package com.sanctum.ir.mapreduce;
 
 import com.sanctum.ir.Tweet;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -26,6 +27,7 @@ import java.util.HashMap;
  * @author Matt
  */
 public class Mapper extends Thread {
+    public static volatile int ID = 0;
     
     public volatile boolean done = false;
     private final Tweet[] tweets;
@@ -46,11 +48,11 @@ public class Mapper extends Thread {
         for (Tweet t : this.tweets) {
             if(t == null) continue;
             
-            HashMap words = t.getWords();
+            ArrayList<String> words = t.getWords();
             
             if(words == null) continue;
             
-            for (Object k : words.keySet()) {
+            for (String k : words) {
                 String key = (String) k;
                 key = key.toLowerCase();
                 

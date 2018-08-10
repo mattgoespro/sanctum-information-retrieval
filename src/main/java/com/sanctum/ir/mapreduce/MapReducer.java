@@ -142,7 +142,6 @@ public class MapReducer {
                     String togo = (String) m.get(k);
                     
                     if(hereVal.substring(0, hereVal.indexOf("(")).equalsIgnoreCase(togo.substring(0, togo.indexOf("(")))) {
-                        System.out.println(togo + " " + hereVal);
                         finalMap.put(key, hereVal.substring(0, hereVal.indexOf(")") - 1) + ", " + togo.substring(togo.indexOf("(") + 1, togo.indexOf(")") + 1));
                     } else {
                         finalMap.put(key, finalMap.get(key) + "; " + m.get(k).toString());

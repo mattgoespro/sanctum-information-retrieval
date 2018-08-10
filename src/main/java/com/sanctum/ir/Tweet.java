@@ -34,11 +34,11 @@ public class Tweet {
     private final String containedFile;
     private final int tweetIndex;
     private final String rawText;
+    private ArrayList<String> words;
     private String[] tokenizedRawText;
     private ArrayList<String> mentions;
     private ArrayList<String> hashtags;
     private ArrayList<String> links;
-    private HashMap<String, String> wordTags;
 
     /**
      * Constructor
@@ -51,6 +51,7 @@ public class Tweet {
         this.containedFile = containedFile;
         this.tweetIndex = tweetIndex;
         this.rawText = rawText;
+        this.words = new ArrayList();
         this.mentions = new ArrayList();
         this.hashtags = new ArrayList();
         this.links = new ArrayList();
@@ -66,15 +67,12 @@ public class Tweet {
     /**
      * Tags the text of the tweet with its parts of speech.
      *
-     * @param tagger
-     * @param tokenizer
      */
-    public void tagText(POSTaggerME tagger, TokenizerME tokenizer) {
+    public void filter() {
         tokenizedRawText = rawText.split(" ");
-        ArrayList<String> words = new ArrayList();
 
         for (String word : tokenizedRawText) {
-            if (!word.startsWith("http") && !word.startsWith("#") && !word.startsWith("@")) {
+            if (!word.startsWith("http")) {
                 word = word.replaceAll("\\p{Punct}", " ");
                 String[] process = word.split(" ");
 
@@ -87,15 +85,7 @@ public class Tweet {
                 words.add(word);
             }
         }
-
-        String[] fi = new String[words.size()];
-
-        for (int i = 0; i < words.size(); i++) {
-            fi[i] = words.get(i);
-        }
-
-        String[] tags = tagger.tag(fi);
-        this.wordTags = filter.filterText(words, tags);
+        filter.filterText(words);
     }
 
     /**
@@ -176,24 +166,7 @@ public class Tweet {
         return this.tweetIndex;
     }
 
-    /**
-     * Returns the list of filtered words and tags.
-     *
-     * @return HashMap
-     */
-    public HashMap<String, String> getWords() {
-        return this.wordTags;
-    }
-
-    @Override
-    public String toString() {
-        String words = "";
-
-        for (Object w : wordTags.keySet()) {
-            words += w.toString() + " (" + POSStrings.get(wordTags.get(w)) + "), ";
-        }
-
-        words += this.containedFile;
-        return words;
+    public ArrayList<String> getWords() {
+        return this.words;
     }
 }

@@ -22,6 +22,7 @@ import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Scanner;
 
@@ -33,7 +34,6 @@ import java.util.Scanner;
 public class TagFilter {
 
     private ArrayList<String> tagValueBlacklist;
-    private ArrayList<String> tagPosBlacklist;
     private boolean inclMentions, inclHashtags, inclLinks;
 
     /**
@@ -53,7 +53,6 @@ public class TagFilter {
      */
     public void loadBlacklist(String blacklistFile) throws FileNotFoundException {
         this.tagValueBlacklist = new ArrayList();
-        this.tagPosBlacklist = new ArrayList();
         Scanner scFile = new Scanner(new File(blacklistFile));
         String line;
 
@@ -61,11 +60,7 @@ public class TagFilter {
             line = scFile.nextLine();
 
             if (!line.startsWith("#")) {
-                if (!line.startsWith("!")) {
-                    this.tagValueBlacklist.add(line);
-                } else {
-                    this.tagPosBlacklist.add(line.substring(1));
-                }
+                this.tagValueBlacklist.add(line);
             }
         }
         scFile.close();
@@ -129,23 +124,19 @@ public class TagFilter {
      * Filters the text for indexing.
      *
      * @param words
-     * @param tags
-     * @return HashMap<String, String>
      */
-    public HashMap<String, String> filterText(ArrayList<String> words, String[] tags) {
-        HashMap<String, String> wordTags = new HashMap();
-
+    public void filterText(ArrayList<String> words) {
         // store word and tags in hashmap
-        for (int i = 0; i < words.size(); i++) {
-            if ((words.get(i).startsWith("#") && this.inclHashtags) || (words.get(i).startsWith("@") && this.inclMentions) || (words.get(i).startsWith("http://") && this.inclLinks)) {
-                wordTags.put(words.get(i), tags[i]);
-            } else if (this.tagPosBlacklist.contains(tags[i])) {
-            } else if (this.tagValueBlacklist.contains(words.get(i))) {
-            } else {
-                wordTags.put(words.get(i), tags[i]);
+        Iterator it = words.iterator();
+        
+        while(it.hasNext()) {
+            String w = (String) it.next();
+            
+            if ((w.startsWith("#") && !this.inclHashtags) || (w.startsWith("@") && !this.inclMentions) || (w.startsWith("http://") && !this.inclLinks)) {
+                it.remove();
+            } else if (this.tagValueBlacklist.contains(w)) {
+                it.remove();
             }
         }
-
-        return wordTags;
     }
 }
