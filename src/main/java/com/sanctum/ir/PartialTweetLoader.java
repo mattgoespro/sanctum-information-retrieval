@@ -21,7 +21,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
-import java.util.Scanner;
 import opennlp.tools.postag.POSModel;
 import opennlp.tools.postag.POSTaggerME;
 import opennlp.tools.tokenize.TokenizerME;
@@ -71,6 +70,7 @@ public class PartialTweetLoader extends TweetLoader {
                 this.tweets[count] = new Tweet(this.fileName, currLine, line);
                 try {
                     this.tweets[count].tagText(posTagger, tokenizer);
+                    //System.out.println(this.tweets[count]);
                 } catch (Exception e) {}
 
                 ++count;

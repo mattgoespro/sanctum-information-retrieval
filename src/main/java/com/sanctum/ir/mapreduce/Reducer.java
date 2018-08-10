@@ -47,9 +47,17 @@ public class Reducer extends Thread {
         for (HashMap m : mappings) {
             for (Object k : m.keySet()) {
                 String key = (String) k;
+                key = key.toLowerCase();
                 
-                if (reducedPairs.containsKey(key.toLowerCase())) {
-                    reducedPairs.put(key, reducedPairs.get(key) + "; " + m.get(k).toString());
+                if (reducedPairs.containsKey(key)) {
+                    String hereVal = reducedPairs.get(key);
+                    String togo = (String) m.get(k);
+                    
+                    if(hereVal.substring(0, hereVal.indexOf("(")).equalsIgnoreCase(togo.substring(0, togo.indexOf("(")))) {
+                        reducedPairs.put(key, hereVal.substring(0, hereVal.indexOf(")") - 1) + ", " + togo.substring(togo.indexOf("(") + 1, togo.indexOf(")") + 1));
+                    } else {
+                        reducedPairs.put(key, reducedPairs.get(key) + "; " + m.get(k).toString());
+                    }
                 } else {
                     reducedPairs.put(key, m.get(k).toString());
                 }

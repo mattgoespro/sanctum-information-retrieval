@@ -35,8 +35,7 @@ public class TagFilter {
     private ArrayList<String> tagValueBlacklist;
     private ArrayList<String> tagPosBlacklist;
     private boolean inclMentions, inclHashtags, inclLinks;
-    private final List<String> punctuation = Arrays.asList("!", "[", "]", "{", "}", ".", ",", "?", "/", "\\", "|", "(", ")", "@", "#", "$", "%", "^", "&", "*", "_", "-", "+", "=", "`", "~", "<", ">", ":", ";", "'", "\"");
-    
+
     /**
      * Constructor
      */
@@ -80,9 +79,10 @@ public class TagFilter {
     public void includeMentions(boolean inclMentions) {
         this.inclMentions = inclMentions;
     }
-    
+
     /**
      * Returns whether the filter should include mentions in indexing.
+     *
      * @return boolean
      */
     public boolean includesMentions() {
@@ -97,9 +97,10 @@ public class TagFilter {
     public void includeHashtags(boolean inclHashtags) {
         this.inclHashtags = inclHashtags;
     }
-    
+
     /**
      * Returns whether the filter should include hashtags in indexing.
+     *
      * @return boolean
      */
     public boolean includesHashtags() {
@@ -114,17 +115,19 @@ public class TagFilter {
     public void includeLinks(boolean inclLinks) {
         this.inclLinks = inclLinks;
     }
-    
+
     /**
      * Returns whether the filter should include links in indexing.
+     *
      * @return boolean
      */
     public boolean includesLinks() {
         return this.inclLinks;
     }
-    
+
     /**
      * Filters the text for indexing.
+     *
      * @param words
      * @param tags
      * @return HashMap<String, String>
@@ -134,19 +137,12 @@ public class TagFilter {
 
         // store word and tags in hashmap
         for (int i = 0; i < words.size(); i++) {
-            // ignore words with a specific part-of-speech
-            if(this.tagPosBlacklist.contains(tags[i])) continue;
-            
-            // ignore specific words
-            if(this.tagValueBlacklist.contains(words.get(i))) continue;
-            
-            // ignore punctuation marks
-            if(this.punctuation.contains(words.get(i))) continue;
-            
             if ((words.get(i).startsWith("#") && this.inclHashtags) || (words.get(i).startsWith("@") && this.inclMentions) || (words.get(i).startsWith("http://") && this.inclLinks)) {
                 wordTags.put(words.get(i), tags[i]);
+            } else if (this.tagPosBlacklist.contains(tags[i])) {
+            } else if (this.tagValueBlacklist.contains(words.get(i))) {
             } else {
-                wordTags.put(words.get(i),tags[i]);
+                wordTags.put(words.get(i), tags[i]);
             }
         }
 

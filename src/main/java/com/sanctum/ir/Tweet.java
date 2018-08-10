@@ -72,35 +72,28 @@ public class Tweet {
     public void tagText(POSTaggerME tagger, TokenizerME tokenizer) {
         tokenizedRawText = rawText.split(" ");
         ArrayList<String> words = new ArrayList();
-        
+
         for (String word : tokenizedRawText) {
-            if(!word.startsWith("http")) {
-                word = word.replaceAll("\\.", " ").replaceAll("!", " ")
-                        .replaceAll("\\?", " ").replaceAll(",", " ")
-                        .replaceAll(":", " ").replaceAll("\\\\", " ")
-                        .replaceAll("\\*", " ").replaceAll("-", " ")
-                        .replaceAll("=", " ").replaceAll("&", " ")
-                        .replaceAll("\\(", " ").replaceAll("\\)", " ")
-                        .replaceAll(";", " ").replaceAll("\\+", " ")
-                        .replaceAll("\"", " ").replaceAll("/", " ")
-                        .replaceAll("\\s+", " ");
-                
+            if (!word.startsWith("http") && !word.startsWith("#") && !word.startsWith("@")) {
+                word = word.replaceAll("\\p{Punct}", " ");
                 String[] process = word.split(" ");
-                
+
                 for (String s : process) {
-                    if(!s.equals("")) words.add(s);
+                    if (!s.equals("")) {
+                        words.add(s);
+                    }
                 }
             } else {
                 words.add(word);
             }
         }
-        
+
         String[] fi = new String[words.size()];
-        
+
         for (int i = 0; i < words.size(); i++) {
             fi[i] = words.get(i);
         }
-        
+
         String[] tags = tagger.tag(fi);
         this.wordTags = filter.filterText(words, tags);
     }
@@ -197,7 +190,7 @@ public class Tweet {
         String words = "";
 
         for (Object w : wordTags.keySet()) {
-            words += w.toString() + " ";
+            words += w.toString() + " (" + POSStrings.get(wordTags.get(w)) + "), ";
         }
 
         words += this.containedFile;

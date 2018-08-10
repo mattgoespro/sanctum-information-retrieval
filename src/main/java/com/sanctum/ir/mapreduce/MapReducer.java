@@ -60,7 +60,7 @@ public class MapReducer {
     public void mapreduce(ThreadedDataLoader loader) {
         ArrayList<Tweet[]> data = loader.getLoadedData();
         createMappers(data);
-
+        System.out.print("Started mapping...");
         while (!mappers.isEmpty() || !mapperQueue.isEmpty()) {
             // if all mappers done and 1 mapper in queue
             if (mappers.isEmpty() && mapperQueue.size() == 1) {
@@ -83,6 +83,7 @@ public class MapReducer {
 
             checkMappers();
         }
+        System.out.println("done.");
     }
 
     /**
@@ -117,6 +118,7 @@ public class MapReducer {
      * @throws IOException
      */
     public void merge() throws IOException {
+        System.out.print("Merging results...");
         ArrayList<HashMap> mappings = new ArrayList();
         HashMap<String, String> finalMap = new HashMap();
 
@@ -136,14 +138,25 @@ public class MapReducer {
                 String key = (String) k;
 
                 if (finalMap.containsKey(key)) {
-                    finalMap.put(key, finalMap.get(key) + "; " + m.get(k).toString());
+                    String hereVal = finalMap.get(key);
+                    String togo = (String) m.get(k);
+                    
+                    if(hereVal.substring(0, hereVal.indexOf("(")).equalsIgnoreCase(togo.substring(0, togo.indexOf("(")))) {
+                        System.out.println(togo + " " + hereVal);
+                        finalMap.put(key, hereVal.substring(0, hereVal.indexOf(")") - 1) + ", " + togo.substring(togo.indexOf("(") + 1, togo.indexOf(")") + 1));
+                    } else {
+                        finalMap.put(key, finalMap.get(key) + "; " + m.get(k).toString());
+                    }
                 } else {
                     finalMap.put(key, m.get(k).toString());
                 }
             }
         }
-
+        System.out.println("done.");
+        System.out.print("Writing index...");
         writeIndex(finalMap);
+        System.out.println("done.");
+        System.out.println("Indexing complete.");
     }
 
     /**
@@ -167,7 +180,6 @@ public class MapReducer {
      * @throws IOException
      */
     private void writeIndex(HashMap<String, String> finalMap) throws IOException {
-        System.out.println("Writing results...");
         File indexFolder = new File(Configuration.INDEX_SAVE_DIRECTORY);
         indexFolder.mkdir();
         SortedSet<String> keys = new TreeSet<>(finalMap.keySet());
@@ -182,13 +194,13 @@ public class MapReducer {
             }
 
             try {
+                key = key.length() > 30 ? key.substring(0, 30) : key;
                 writer = new PrintWriter(new BufferedWriter(new FileWriter(new File(Configuration.INDEX_SAVE_DIRECTORY + f + key.toLowerCase() + ".txt"))));
                 writer.println(finalMap.get(key));
                 writer.flush();
-            } catch (Exception e) {}
+            } catch (IOException e) {}
 
         }
-        System.out.println("Writing complete.");
     }
 
 }
