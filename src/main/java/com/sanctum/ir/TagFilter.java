@@ -17,14 +17,26 @@
  */
 package com.sanctum.ir;
 
+import java.io.BufferedReader;
+import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
+import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
+import org.apache.hadoop.conf.Configuration;
 import java.util.List;
 import java.util.Scanner;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.LineIterator;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 /**
  * Class that is used to filter and process tags.
@@ -34,15 +46,16 @@ import java.util.Scanner;
 public class TagFilter {
 
     private ArrayList<String> tagValueBlacklist;
-    private boolean inclMentions, inclHashtags, inclLinks;
+    private boolean inclMentions, inclHashtags, inclLinks, useHDFS;
 
     /**
      * Constructor
      */
-    public TagFilter() {
-        this.inclMentions = Boolean.parseBoolean(Configuration.INDEXING_INCLUDE_MENTIONS);
-        this.inclHashtags = Boolean.parseBoolean(Configuration.INDEXING_INCLUDE_HASHTAGS);
-        this.inclLinks = Boolean.parseBoolean(Configuration.INDEXING_INCLUDE_LINKS);
+    public TagFilter(boolean useHDFS) {
+        this.useHDFS = useHDFS;
+        this.inclMentions = Boolean.parseBoolean(com.sanctum.ir.Configuration.INDEXING_INCLUDE_MENTIONS);
+        this.inclHashtags = Boolean.parseBoolean(com.sanctum.ir.Configuration.INDEXING_INCLUDE_HASHTAGS);
+        this.inclLinks = Boolean.parseBoolean(com.sanctum.ir.Configuration.INDEXING_INCLUDE_LINKS);
     }
 
     /**
@@ -51,19 +64,36 @@ public class TagFilter {
      * @param blacklistFile
      * @throws FileNotFoundException
      */
-    public void loadBlacklist(String blacklistFile) throws FileNotFoundException {
+    public void loadBlacklist(String blacklistFile) throws FileNotFoundException, IOException {
         this.tagValueBlacklist = new ArrayList();
-        Scanner scFile = new Scanner(new File(blacklistFile));
-        String line;
 
-        while (scFile.hasNext()) {
-            line = scFile.nextLine();
+        if (!useHDFS) {
+            Scanner scFile = new Scanner(new File(blacklistFile));
+            String line;
 
-            if (!line.startsWith("#")) {
-                this.tagValueBlacklist.add(line);
+            while (scFile.hasNext()) {
+                line = scFile.nextLine();
+
+                if (!line.startsWith("#")) {
+                    this.tagValueBlacklist.add(line);
+                }
+            }
+            scFile.close();
+        } else {
+            String HDFS_ROOT_URL = "hdfs://ip-172-31-42-35.us-east-2.compute.internal:8020";
+            String uri = HDFS_ROOT_URL + "/sanctum/indexing_token_blacklist.cfg";
+            FileSystem sys = FileSystem.get(URI.create(uri), new Configuration());
+            FSDataInputStream fs = sys.open(new Path(uri));
+            LineIterator lineIterator = IOUtils.lineIterator(fs, "UTF-8");
+            String line;
+            while(lineIterator.hasNext()) {
+                line = lineIterator.nextLine();
+
+                if (!line.startsWith("#")) {
+                    this.tagValueBlacklist.add(line);
+                }
             }
         }
-        scFile.close();
     }
 
     /**
@@ -128,10 +158,10 @@ public class TagFilter {
     public void filterText(ArrayList<String> words) {
         // store word and tags in hashmap
         Iterator it = words.iterator();
-        
-        while(it.hasNext()) {
+
+        while (it.hasNext()) {
             String w = (String) it.next();
-            
+
             if ((w.startsWith("#") && !this.inclHashtags) || (w.startsWith("@") && !this.inclMentions) || (w.startsWith("http://") && !this.inclLinks)) {
                 it.remove();
             } else if (this.tagValueBlacklist.contains(w)) {

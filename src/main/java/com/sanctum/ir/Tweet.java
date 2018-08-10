@@ -18,8 +18,11 @@
 package com.sanctum.ir;
 
 import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import opennlp.tools.postag.POSTaggerME;
 import opennlp.tools.tokenize.TokenizerME;
 
@@ -55,12 +58,14 @@ public class Tweet {
         this.mentions = new ArrayList();
         this.hashtags = new ArrayList();
         this.links = new ArrayList();
-        this.filter = new TagFilter();
+        this.filter = new TagFilter(false);
 
         try {
             this.filter.loadBlacklist("indexing_token_blacklist.cfg");
         } catch (FileNotFoundException ex) {
             System.out.println("Unable to load blacklist file.");
+        } catch (IOException ex) {
+            Logger.getLogger(Tweet.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
