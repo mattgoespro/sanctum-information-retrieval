@@ -3,7 +3,9 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+import com.sanctum.ir.TagFilter;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -12,6 +14,7 @@ import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
+import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 
 public class HadoopMain {
@@ -31,11 +34,31 @@ public class HadoopMain {
          */
         @Override
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-            String[] words = key.toString().split(" ");
-            DIRECTORY.set(words[words.length - 1]);
+            String fileName = ((FileSplit) context.getInputSplit()).getPath().getName();
+            String[] raw = key.toString().split(" ");
+            ArrayList<String> words = new ArrayList();
+            TagFilter filter = new TagFilter();
+            DIRECTORY.set(fileName);
+
+            for (String w : raw) {
+                if (!w.startsWith("http")) {
+                    w = w.replaceAll("\\p{Punct}", " ");
+                    String[] process = w.split(" ");
+
+                    for (String s : process) {
+                        if (!s.equals("")) {
+                            words.add(s);
+                        }
+                    }
+                } else {
+                    words.add(w);
+                }
+            }
             
-            for (int i = 0; i < words.length - 1; i++) {
-                word.set(words[i]);
+            filter.filterText(words);
+
+            for (String w : words) {
+                word.set(w);
                 context.write(word, DIRECTORY);
             }
         }
@@ -48,11 +71,11 @@ public class HadoopMain {
         @Override
         public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
             String path = "";
-            
+
             for (Text val : values) {
                 path += val.toString() + "; ";
             }
-            
+
             result.set(path);
             context.write(key, result);
         }
