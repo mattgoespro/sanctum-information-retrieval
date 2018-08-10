@@ -60,7 +60,7 @@ public class MapReducer {
     public void mapreduce(ThreadedDataLoader loader) {
         ArrayList<Tweet[]> data = loader.getLoadedData();
         createMappers(data);
-        System.out.print("Started mapping...");
+        
         while (!mappers.isEmpty() || !mapperQueue.isEmpty()) {
             // if all mappers done and 1 mapper in queue
             if (mappers.isEmpty() && mapperQueue.size() == 1) {

@@ -59,8 +59,6 @@ public class HadoopMain {
     }
 
     public static void main(String[] args) throws Exception {
-        Main.main(args);
-        
         Configuration conf = new Configuration();
         Job job = Job.getInstance(conf, "word paths");
         job.setJarByClass(HadoopMain.class);
@@ -69,8 +67,8 @@ public class HadoopMain {
         job.setReducerClass(PathReducer.class);
         job.setOutputKeyClass(Text.class);
         job.setOutputValueClass(Text.class);
-        FileInputFormat.addInputPath(job, new Path("filtered_tweets.txt"));
-        FileOutputFormat.setOutputPath(job, new Path("output.txt"));
+        FileInputFormat.addInputPath(job, new Path("/sanctum"));
+        FileOutputFormat.setOutputPath(job, new Path("/sanctum/output"));
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 }
