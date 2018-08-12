@@ -17,20 +17,13 @@
  */
 package com.sanctum.ir;
 
-import java.io.BufferedReader;
-import java.io.DataInputStream;
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
 import java.util.Iterator;
 import org.apache.hadoop.conf.Configuration;
-import java.util.List;
 import java.util.Scanner;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
@@ -46,13 +39,12 @@ import org.apache.hadoop.fs.Path;
 public class TagFilter {
 
     private ArrayList<String> tagValueBlacklist;
-    private boolean inclMentions, inclHashtags, inclLinks, useHDFS;
+    private boolean inclMentions, inclHashtags, inclLinks;
 
     /**
      * Constructor
      */
-    public TagFilter(boolean useHDFS) {
-        this.useHDFS = useHDFS;
+    public TagFilter() {
         this.inclMentions = Boolean.parseBoolean(com.sanctum.ir.Configuration.INDEXING_INCLUDE_MENTIONS);
         this.inclHashtags = Boolean.parseBoolean(com.sanctum.ir.Configuration.INDEXING_INCLUDE_HASHTAGS);
         this.inclLinks = Boolean.parseBoolean(com.sanctum.ir.Configuration.INDEXING_INCLUDE_LINKS);
@@ -62,12 +54,13 @@ public class TagFilter {
      * Loads the list of words from a file to exclude from indexing.
      *
      * @param blacklistFile
+     * @param fileSystemRoot
      * @throws FileNotFoundException
      */
-    public void loadBlacklist(String blacklistFile) throws FileNotFoundException, IOException {
+    public void loadBlacklist(String blacklistFile, String fileSystemRoot) throws FileNotFoundException, IOException {
         this.tagValueBlacklist = new ArrayList();
 
-        if (!useHDFS) {
+        if (!fileSystemRoot.startsWith("hdfs://")) {
             Scanner scFile = new Scanner(new File(blacklistFile));
             String line;
 
@@ -80,8 +73,7 @@ public class TagFilter {
             }
             scFile.close();
         } else {
-            String HDFS_ROOT_URL = "hdfs://ip-172-31-42-35.us-east-2.compute.internal:8020";
-            String uri = HDFS_ROOT_URL + "/sanctum/indexing_token_blacklist.cfg";
+            String uri = fileSystemRoot + "/sanctum/indexing_token_blacklist.cfg";
             FileSystem sys = FileSystem.get(URI.create(uri), new Configuration());
             FSDataInputStream fs = sys.open(new Path(uri));
             LineIterator lineIterator = IOUtils.lineIterator(fs, "UTF-8");

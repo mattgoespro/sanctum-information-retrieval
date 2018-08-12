@@ -37,8 +37,8 @@ public class HadoopMain {
             String fileName = ((FileSplit) context.getInputSplit()).getPath().getName();
             String[] raw = key.toString().split(" ");
             ArrayList<String> words = new ArrayList();
-            TagFilter filter = new TagFilter(true);
-            filter.loadBlacklist("/sanctum/indexing_token_blacklist.cfg");
+            TagFilter filter = new TagFilter();
+            filter.loadBlacklist("/sanctum/indexing_token_blacklist.cfg", com.sanctum.ir.Configuration.FILESYSTEM_ROOT);
             DIRECTORY.set(fileName);
 
             for (String w : raw) {

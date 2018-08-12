@@ -58,10 +58,10 @@ public class Tweet {
         this.mentions = new ArrayList();
         this.hashtags = new ArrayList();
         this.links = new ArrayList();
-        this.filter = new TagFilter(false);
+        this.filter = new TagFilter();
 
         try {
-            this.filter.loadBlacklist("indexing_token_blacklist.cfg");
+            this.filter.loadBlacklist("indexing_token_blacklist.cfg", Configuration.FILESYSTEM_ROOT);
         } catch (FileNotFoundException ex) {
             System.out.println("Unable to load blacklist file.");
         } catch (IOException ex) {

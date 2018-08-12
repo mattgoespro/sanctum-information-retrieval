@@ -19,7 +19,6 @@ package com.sanctum.ir;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.util.HashMap;
 import java.util.Scanner;
 
 /**
@@ -32,12 +31,14 @@ public class Configuration {
             KEY_INDEXING_INCLUDE_HASHTAGS = "Include hashtags", 
             KEY_INDEXING_INCLUDE_MENTIONS = "Include mentions",
             KEY_INDEXING_INCLUDE_LINKS = "Include links", 
-            KEY_INDEX_SAVE_DIRECTORY = "Inverted file save directory";
+            KEY_INDEX_SAVE_DIRECTORY = "Inverted file save directory", 
+            KEY_FILESYSTEM_ROOT = "Filesystem root";
     public static String DATA_DIRECTORY, 
             INDEXING_INCLUDE_HASHTAGS, 
             INDEXING_INCLUDE_MENTIONS,
             INDEXING_INCLUDE_LINKS, 
-            INDEX_SAVE_DIRECTORY;
+            INDEX_SAVE_DIRECTORY,
+            FILESYSTEM_ROOT;
     
     /**
      * Loads the configuration. Returns true if successful.
@@ -64,6 +65,7 @@ public class Configuration {
                     else if(line.startsWith(Configuration.KEY_INDEXING_INCLUDE_MENTIONS)) Configuration.INDEXING_INCLUDE_MENTIONS = value;
                     else if(line.startsWith(Configuration.KEY_INDEXING_INCLUDE_LINKS)) Configuration.INDEXING_INCLUDE_LINKS = value;
                     else if(line.startsWith(Configuration.KEY_INDEX_SAVE_DIRECTORY)) Configuration.INDEX_SAVE_DIRECTORY = value;
+                    else if(line.startsWith(Configuration.KEY_FILESYSTEM_ROOT)) Configuration.FILESYSTEM_ROOT = value;
                     else return false;
                 }
                 

@@ -21,7 +21,9 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Scanner;
@@ -47,15 +49,38 @@ public class SearchIndex {
 
         if (docs != null) {
             String[] documents = docs.split("; ");
-
+            String[] docsCopy = documents.clone();
             System.out.println(documents.length + " documents found.");
+            Arrays.sort(docsCopy, new DocumentComparator());
+
+            if (!Arrays.equals(docsCopy, documents)) {
+                System.out.println("Documents not sorted. Writing documents in order.");
+                File ind = new File(Configuration.INDEX_SAVE_DIRECTORY + term.charAt(0) + "/" + term + ".txt");
+
+                if (ind.exists()) {
+                    try {
+                        PrintWriter writer = new PrintWriter(new FileWriter(ind));
+
+                        for (String doc : docsCopy) {
+                            writer.write(doc + "; ");
+                            writer.flush();
+                        }
+
+                        writer.close();
+                    } catch (IOException ex) {
+                        Logger.getLogger(SearchIndex.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                } else {
+                    System.out.println("No index for '" + term + "' exists.");
+                    return result;
+                }
+            }
 
             for (int i = 0; i < documents.length; i++) {
                 String doc = documents[i].substring(0, documents[i].indexOf("("));
                 String[] lines = documents[i].substring(documents[i].indexOf("(") + 1, documents[i].indexOf(")")).split(", ");
-                
                 try {
-                    for (String t : getTweet(doc, lines)) {
+                    for (String t : getTweets(doc, lines)) {
                         result.add(t);
                     }
                 } catch (IOException ex) {
@@ -74,7 +99,7 @@ public class SearchIndex {
      * @param line
      * @return String
      */
-    private static ArrayList<String> getTweet(String doc, String[] lines) throws IOException {
+    private static ArrayList<String> getTweets(String doc, String[] lines) throws IOException {
         try {
             BufferedReader scFile = new BufferedReader(new FileReader(new File(doc)));
             Arrays.sort(lines);
@@ -82,20 +107,22 @@ public class SearchIndex {
             int nextStop = Integer.parseInt(lines[0]);
             ArrayList<String> retrieved = new ArrayList();
             String l = scFile.readLine();
-            
+
             while (l != null) {
                 if (currLine == nextStop) {
                     retrieved.add(l);
                     ++stopIndex;
-                    
-                    if(stopIndex == lines.length) break;
-                    
+
+                    if (stopIndex == lines.length) {
+                        break;
+                    }
+
                     nextStop = Integer.parseInt(lines[stopIndex]);
                 }
                 l = scFile.readLine();
                 ++currLine;
             }
-            
+
             return retrieved;
         } catch (FileNotFoundException ex) {
             Logger.getLogger(SearchIndex.class.getName()).log(Level.SEVERE, null, ex);
@@ -112,11 +139,6 @@ public class SearchIndex {
     private static String documents(String term) {
         System.out.println("Checking " + Configuration.INDEX_SAVE_DIRECTORY + term.charAt(0) + "/" + term + ".txt");
         File ind = new File(Configuration.INDEX_SAVE_DIRECTORY + term.charAt(0) + "/" + term + ".txt");
-
-        if (!ind.exists()) {
-            System.out.println("No index found for term '" + term + "'");
-            return null;
-        }
 
         try {
             Scanner scFile = new Scanner(ind);
