@@ -35,7 +35,7 @@ public class HadoopMain {
         @Override
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
             String fileName = ((FileSplit) context.getInputSplit()).getPath().getName();
-            String[] raw = key.toString().split(" ");
+            String[] raw = value.toString().split(" ");
             ArrayList<String> words = new ArrayList();
             DIRECTORY.set(fileName);
 
@@ -45,6 +45,7 @@ public class HadoopMain {
                     String[] process = w.split(" ");
 
                     for (String s : process) {
+                        System.out.println(s);
                         if (!s.equals("")) {
                             words.add(s);
                         }
@@ -72,7 +73,9 @@ public class HadoopMain {
             String path = "";
 
             for (Text val : values) {
-                path += val.toString() + "; ";
+                if(!val.equals("") && !path.contains(val.toString())) {
+                    path += val.toString() + "; ";
+                }
             }
 
             result.set(path);

@@ -48,6 +48,7 @@ public class TagFilter {
         this.inclMentions = Boolean.parseBoolean(com.sanctum.ir.Configuration.INDEXING_INCLUDE_MENTIONS);
         this.inclHashtags = Boolean.parseBoolean(com.sanctum.ir.Configuration.INDEXING_INCLUDE_HASHTAGS);
         this.inclLinks = Boolean.parseBoolean(com.sanctum.ir.Configuration.INDEXING_INCLUDE_LINKS);
+        this.tagValueBlacklist = new ArrayList();
     }
 
     /**
@@ -57,7 +58,6 @@ public class TagFilter {
      * @throws FileNotFoundException
      */
     public void loadBlacklist(String fileSystemRoot) throws FileNotFoundException, IOException {
-        this.tagValueBlacklist = new ArrayList();
         System.out.println(fileSystemRoot);
         if (!fileSystemRoot.startsWith("hdfs://")) {
             Scanner scFile = new Scanner(new File("indexing_token_blacklist.cfg"));
@@ -153,10 +153,12 @@ public class TagFilter {
         while (it.hasNext()) {
             String w = (String) it.next();
 
-            if ((w.startsWith("#") && !this.inclHashtags) || (w.startsWith("@") && !this.inclMentions) || (w.startsWith("http://") && !this.inclLinks)) {
-                it.remove();
-            } else if (this.tagValueBlacklist.contains(w)) {
-                it.remove();
+            if(w != null) {
+                if ((w.startsWith("#") && !this.inclHashtags) || (w.startsWith("@") && !this.inclMentions) || (w.startsWith("http://") && !this.inclLinks)) {
+                    it.remove();
+                } else if (this.tagValueBlacklist.contains(w)) {
+                    it.remove();
+                }
             }
         }
     }
