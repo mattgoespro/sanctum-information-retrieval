@@ -37,8 +37,6 @@ public class HadoopMain {
             String fileName = ((FileSplit) context.getInputSplit()).getPath().getName();
             String[] raw = key.toString().split(" ");
             ArrayList<String> words = new ArrayList();
-            TagFilter filter = new TagFilter();
-            filter.loadBlacklist("/sanctum/indexing_token_blacklist.cfg", com.sanctum.ir.Configuration.FILESYSTEM_ROOT);
             DIRECTORY.set(fileName);
 
             for (String w : raw) {
@@ -56,7 +54,7 @@ public class HadoopMain {
                 }
             }
 
-            filter.filterText(words);
+            HadoopMain.filter.filterText(words);
 
             for (String w : words) {
                 word.set(w);
@@ -81,11 +79,14 @@ public class HadoopMain {
             context.write(key, result);
         }
     }
-
+    
+    public static TagFilter filter = new TagFilter();
+    
     public static void main(String[] args) throws Exception {
-        boolean irConfig = com.sanctum.ir.Configuration.loadConfiguration("config.cfg");
-
+        boolean irConfig = com.sanctum.ir.Configuration.loadConfiguration("hdfs://ip-172-31-4-196.us-east-2.compute.internal:8020");
+        
         if (irConfig) {
+            filter.loadBlacklist("hdfs://ip-172-31-4-196.us-east-2.compute.internal:8020");
             Configuration conf = new Configuration();
             Job job = Job.getInstance(conf, "word paths");
             job.setJarByClass(HadoopMain.class);
@@ -97,6 +98,8 @@ public class HadoopMain {
             FileInputFormat.addInputPath(job, new Path("/sanctum/data"));
             FileOutputFormat.setOutputPath(job, new Path("/sanctum/output"));
             System.exit(job.waitForCompletion(true) ? 0 : 1);
+        } else {
+            System.out.println("Unable to load config file.");
         }
     }
 }

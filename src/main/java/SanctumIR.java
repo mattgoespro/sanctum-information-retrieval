@@ -41,7 +41,11 @@ public class SanctumIR extends javax.swing.JFrame {
         initComponents();
         super.setLocationRelativeTo(null);
         super.setResizable(false);
-        config = Configuration.loadConfiguration("config.cfg");
+        try {
+            config = Configuration.loadConfiguration("");
+        } catch (IOException ex) {
+            Logger.getLogger(SanctumIR.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /**

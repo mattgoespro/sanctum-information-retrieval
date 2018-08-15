@@ -20,11 +20,8 @@ package com.sanctum.ir;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import opennlp.tools.postag.POSTaggerME;
-import opennlp.tools.tokenize.TokenizerME;
 
 /**
  * Tweet class represents the raw tweet data and its tagged parts.
@@ -61,7 +58,7 @@ public class Tweet {
         this.filter = new TagFilter();
 
         try {
-            this.filter.loadBlacklist("indexing_token_blacklist.cfg", Configuration.FILESYSTEM_ROOT);
+            this.filter.loadBlacklist(Configuration.FILESYSTEM_ROOT);
         } catch (FileNotFoundException ex) {
             System.out.println("Unable to load blacklist file.");
         } catch (IOException ex) {

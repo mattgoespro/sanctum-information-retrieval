@@ -22,7 +22,7 @@ public class Main {
      */
     public static void main(String[] args) throws IOException {
         ThreadedDataLoader loader = new ThreadedDataLoader(10);
-        boolean config = Configuration.loadConfiguration("config.cfg");
+        boolean config = Configuration.loadConfiguration("");
         MapReducer reducer = new MapReducer(0, 0, 5);
         
         if (config) {

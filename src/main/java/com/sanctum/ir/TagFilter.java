@@ -53,15 +53,14 @@ public class TagFilter {
     /**
      * Loads the list of words from a file to exclude from indexing.
      *
-     * @param blacklistFile
      * @param fileSystemRoot
      * @throws FileNotFoundException
      */
-    public void loadBlacklist(String blacklistFile, String fileSystemRoot) throws FileNotFoundException, IOException {
+    public void loadBlacklist(String fileSystemRoot) throws FileNotFoundException, IOException {
         this.tagValueBlacklist = new ArrayList();
-
+        System.out.println(fileSystemRoot);
         if (!fileSystemRoot.startsWith("hdfs://")) {
-            Scanner scFile = new Scanner(new File(blacklistFile));
+            Scanner scFile = new Scanner(new File("indexing_token_blacklist.cfg"));
             String line;
 
             while (scFile.hasNext()) {

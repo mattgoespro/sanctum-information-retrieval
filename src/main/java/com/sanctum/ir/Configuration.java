@@ -19,7 +19,14 @@ package com.sanctum.ir;
 
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.net.URI;
 import java.util.Scanner;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.LineIterator;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 /**
  * Loads the IR configuration.
@@ -42,15 +49,14 @@ public class Configuration {
     
     /**
      * Loads the configuration. Returns true if successful.
-     * @param fileName
+     * @param hdfsRoot
      * @return boolean
+     * @throws java.io.IOException
      */
-    public static boolean loadConfiguration(String fileName) {
-        File conf = new File(fileName);
-        
-        if(conf.exists()) {
+    public static boolean loadConfiguration(String hdfsRoot) throws IOException {
+        if(!hdfsRoot.startsWith("hdfs://")) {
             try {
-                Scanner scFile = new Scanner(conf);
+                Scanner scFile = new Scanner(new File("config.cfg"));
                 String line;
                 
                 while(scFile.hasNext()) {
@@ -60,12 +66,12 @@ public class Configuration {
                     String value = line.replaceAll("\\s+", "");
                     value = value.substring(value.indexOf(":") + 1);
                     
-                    if(line.startsWith(Configuration.KEY_DATA_DIRECTORY)) Configuration.DATA_DIRECTORY = value;
-                    else if(line.startsWith(Configuration.KEY_INDEXING_INCLUDE_HASHTAGS)) Configuration.INDEXING_INCLUDE_HASHTAGS = value;
-                    else if(line.startsWith(Configuration.KEY_INDEXING_INCLUDE_MENTIONS)) Configuration.INDEXING_INCLUDE_MENTIONS = value;
-                    else if(line.startsWith(Configuration.KEY_INDEXING_INCLUDE_LINKS)) Configuration.INDEXING_INCLUDE_LINKS = value;
-                    else if(line.startsWith(Configuration.KEY_INDEX_SAVE_DIRECTORY)) Configuration.INDEX_SAVE_DIRECTORY = value;
-                    else if(line.startsWith(Configuration.KEY_FILESYSTEM_ROOT)) Configuration.FILESYSTEM_ROOT = value;
+                    if(line.startsWith(com.sanctum.ir.Configuration.KEY_DATA_DIRECTORY)) com.sanctum.ir.Configuration.DATA_DIRECTORY = value;
+                    else if(line.startsWith(com.sanctum.ir.Configuration.KEY_INDEXING_INCLUDE_HASHTAGS)) com.sanctum.ir.Configuration.INDEXING_INCLUDE_HASHTAGS = value;
+                    else if(line.startsWith(com.sanctum.ir.Configuration.KEY_INDEXING_INCLUDE_MENTIONS)) com.sanctum.ir.Configuration.INDEXING_INCLUDE_MENTIONS = value;
+                    else if(line.startsWith(com.sanctum.ir.Configuration.KEY_INDEXING_INCLUDE_LINKS)) com.sanctum.ir.Configuration.INDEXING_INCLUDE_LINKS = value;
+                    else if(line.startsWith(com.sanctum.ir.Configuration.KEY_INDEX_SAVE_DIRECTORY)) com.sanctum.ir.Configuration.INDEX_SAVE_DIRECTORY = value;
+                    else if(line.startsWith(com.sanctum.ir.Configuration.KEY_FILESYSTEM_ROOT)) com.sanctum.ir.Configuration.FILESYSTEM_ROOT = value;
                     else return false;
                 }
                 
@@ -73,8 +79,29 @@ public class Configuration {
             } catch (FileNotFoundException ex) {
                 return false;
             }
+        } else {
+            String uri = hdfsRoot + "/sanctum/config.cfg";
+            FileSystem sys = FileSystem.get(URI.create(uri), new org.apache.hadoop.conf.Configuration());
+            FSDataInputStream fs = sys.open(new Path(uri));
+            LineIterator lineIterator = IOUtils.lineIterator(fs, "UTF-8");
+            String line;
+            while(lineIterator.hasNext()) {
+                line = lineIterator.nextLine();
+
+                if(line.startsWith("#") || line.startsWith(" ") || line.equals("") || line.startsWith("\n")) continue;
+                    
+                    String value = line.replaceAll("\\s+", "");
+                    value = value.substring(value.indexOf(":") + 1);
+                    
+                    if(line.startsWith(com.sanctum.ir.Configuration.KEY_DATA_DIRECTORY)) com.sanctum.ir.Configuration.DATA_DIRECTORY = value;
+                    else if(line.startsWith(com.sanctum.ir.Configuration.KEY_INDEXING_INCLUDE_HASHTAGS)) com.sanctum.ir.Configuration.INDEXING_INCLUDE_HASHTAGS = value;
+                    else if(line.startsWith(com.sanctum.ir.Configuration.KEY_INDEXING_INCLUDE_MENTIONS)) com.sanctum.ir.Configuration.INDEXING_INCLUDE_MENTIONS = value;
+                    else if(line.startsWith(com.sanctum.ir.Configuration.KEY_INDEXING_INCLUDE_LINKS)) com.sanctum.ir.Configuration.INDEXING_INCLUDE_LINKS = value;
+                    else if(line.startsWith(com.sanctum.ir.Configuration.KEY_INDEX_SAVE_DIRECTORY)) com.sanctum.ir.Configuration.INDEX_SAVE_DIRECTORY = value;
+                    else if(line.startsWith(com.sanctum.ir.Configuration.KEY_FILESYSTEM_ROOT)) com.sanctum.ir.Configuration.FILESYSTEM_ROOT = value;
+                    else return false;
+            }
+            return true;
         }
-        
-        return false;
     }
 }
