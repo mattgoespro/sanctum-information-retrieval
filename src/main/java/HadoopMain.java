@@ -55,7 +55,7 @@ public class HadoopMain {
                     words.add(w);
                 }
             }
-            
+
             filter.filterText(words);
 
             for (String w : words) {
@@ -83,16 +83,20 @@ public class HadoopMain {
     }
 
     public static void main(String[] args) throws Exception {
-        Configuration conf = new Configuration();
-        Job job = Job.getInstance(conf, "word paths");
-        job.setJarByClass(HadoopMain.class);
-        job.setMapperClass(TokenizerMapper.class);
-        job.setCombinerClass(PathReducer.class);
-        job.setReducerClass(PathReducer.class);
-        job.setOutputKeyClass(Text.class);
-        job.setOutputValueClass(Text.class);
-        FileInputFormat.addInputPath(job, new Path("/sanctum"));
-        FileOutputFormat.setOutputPath(job, new Path("/sanctum/output"));
-        System.exit(job.waitForCompletion(true) ? 0 : 1);
+        boolean irConfig = com.sanctum.ir.Configuration.loadConfiguration("config.cfg");
+
+        if (irConfig) {
+            Configuration conf = new Configuration();
+            Job job = Job.getInstance(conf, "word paths");
+            job.setJarByClass(HadoopMain.class);
+            job.setMapperClass(TokenizerMapper.class);
+            job.setCombinerClass(PathReducer.class);
+            job.setReducerClass(PathReducer.class);
+            job.setOutputKeyClass(Text.class);
+            job.setOutputValueClass(Text.class);
+            FileInputFormat.addInputPath(job, new Path("/sanctum/data"));
+            FileOutputFormat.setOutputPath(job, new Path("/sanctum/output"));
+            System.exit(job.waitForCompletion(true) ? 0 : 1);
+        }
     }
 }

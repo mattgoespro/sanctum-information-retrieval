@@ -93,7 +93,7 @@ public class MapReducer {
      */
     private void createMappers(ArrayList<Tweet[]> data) {
         for (int i = 0; i < data.size(); i++) {
-            Mapper m = new Mapper(data.get(i), i);
+            Mapper m = new Mapper(data.get(i));
             mappers.add(m);
             m.start();
         }

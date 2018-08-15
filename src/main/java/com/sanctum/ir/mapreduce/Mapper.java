@@ -31,16 +31,14 @@ public class Mapper extends Thread {
     public volatile boolean done = false;
     private final Tweet[] tweets;
     private final HashMap<String, String> pairs;
-    private int id;
 
     /**
      * Constructor
      *
      * @param tweets
      */
-    public Mapper(Tweet[] tweets, int id) {
+    public Mapper(Tweet[] tweets) {
         this.tweets = tweets;
-        this.id = id;
         this.pairs = new HashMap();
     }
 
