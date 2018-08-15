@@ -21,9 +21,9 @@ public class Main {
      * @throws java.io.IOException
      */
     public static void main(String[] args) throws IOException {
-        ThreadedDataLoader loader = new ThreadedDataLoader(1);
+        ThreadedDataLoader loader = new ThreadedDataLoader(10);
         boolean config = Configuration.loadConfiguration("config.cfg");
-        MapReducer reducer = new MapReducer();
+        MapReducer reducer = new MapReducer(0, 0, 5);
         
         if (config) {
             loader.loadData();

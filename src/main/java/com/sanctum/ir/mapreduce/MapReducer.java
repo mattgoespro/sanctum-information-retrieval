@@ -27,10 +27,11 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.Queue;
 import java.util.SortedSet;
 import java.util.TreeSet;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 /**
  * Naive threaded MapReduce implementation
@@ -39,17 +40,17 @@ import java.util.TreeSet;
  */
 public class MapReducer {
 
-    private final ArrayList<Mapper> mappers;
+    public static BlockingQueue<Mapper> mappers;
     private final ArrayList<Reducer> reducers;
-    private final Queue<Mapper> mapperQueue;
+    public static BlockingQueue<Mapper> mapperQueue;
 
     /**
      * Constructor
      */
-    public MapReducer() {
-        this.mappers = new ArrayList();
+    public MapReducer(int numMapper, int reducersPerMapper, int numWriters) {
+        MapReducer.mappers = new LinkedBlockingQueue();
         this.reducers = new ArrayList();
-        this.mapperQueue = new LinkedList();
+        MapReducer.mapperQueue = new ArrayBlockingQueue(10000);
     }
 
     /**
@@ -81,8 +82,6 @@ public class MapReducer {
                 reducers.add(r);
                 r.start();
             }
-
-            checkMappers();
         }
         System.out.println("done.");
     }
@@ -94,22 +93,9 @@ public class MapReducer {
      */
     private void createMappers(ArrayList<Tweet[]> data) {
         for (int i = 0; i < data.size(); i++) {
-            Mapper m = new Mapper(data.get(i));
+            Mapper m = new Mapper(data.get(i), i);
             mappers.add(m);
             m.start();
-        }
-    }
-
-    /**
-     * Checks if there is a mapper ready to be reduced and adds it to the
-     * finished-mapper queue.
-     */
-    private void checkMappers() {
-        for (int i = 0; i < mappers.size(); i++) {
-            if (mappers.get(i).done) {
-                this.mapperQueue.add(mappers.remove(i));
-                break;
-            }
         }
     }
 

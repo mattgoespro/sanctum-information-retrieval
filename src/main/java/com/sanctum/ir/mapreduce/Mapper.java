@@ -27,51 +27,59 @@ import java.util.HashMap;
  * @author Matt
  */
 public class Mapper extends Thread {
-    public static volatile int ID = 0;
-    
+
     public volatile boolean done = false;
     private final Tweet[] tweets;
     private final HashMap<String, String> pairs;
+    private int id;
 
     /**
      * Constructor
      *
      * @param tweets
      */
-    public Mapper(Tweet[] tweets) {
+    public Mapper(Tweet[] tweets, int id) {
         this.tweets = tweets;
+        this.id = id;
         this.pairs = new HashMap();
     }
 
     @Override
     public void run() {
         for (Tweet t : this.tweets) {
-            if(t == null) continue;
-            
+            if (t == null) {
+                continue;
+            }
+
             ArrayList<String> words = t.getWords();
-            
-            if(words == null) continue;
-            
+
+            if (words == null) {
+                continue;
+            }
+
             for (String k : words) {
                 String key = (String) k;
                 key = key.toLowerCase();
-                
-                if(pairs.containsKey(key)) {
+
+                if (pairs.containsKey(key)) {
                     pairs.put(key, t.getContainingFileName() + "(" + pairs.get(key).substring(pairs.get(key).indexOf("(") + 1, pairs.get(key).indexOf(")")) + ", " + t.getTweetIndex() + ")");
                 } else {
                     pairs.put(key, t.getContainingFileName() + "(" + t.getTweetIndex() + ")");
                 }
             }
         }
-        this.done = true;
+
+        MapReducer.mapperQueue.add(this);
+        MapReducer.mappers.remove(this);
     }
-    
+
     /**
      * Returns the word and containing file pair keys.
+     *
      * @return HashMap
      */
     public HashMap getPairs() {
         return this.pairs;
     }
-    
+
 }

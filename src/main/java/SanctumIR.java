@@ -127,7 +127,7 @@ public class SanctumIR extends javax.swing.JFrame {
     private void btnIndexActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnIndexActionPerformed
         tweetDisplay.setText("");
         ThreadedDataLoader loader = new ThreadedDataLoader(1);
-        MapReducer reducer = new MapReducer();
+        MapReducer reducer = new MapReducer(0, 0, 5);
         
         if (config) {
             loader.loadData();
@@ -143,6 +143,8 @@ public class SanctumIR extends javax.swing.JFrame {
     }//GEN-LAST:event_btnIndexActionPerformed
 
     private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed
+        tweetDisplay.setText("");
+        
         if(!tweetSearch.getText().equals("") && tweetSearch.getText() != null) {
             ArrayList<String> result = SearchIndex.search(tweetSearch.getText());
             
