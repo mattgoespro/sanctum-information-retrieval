@@ -22,10 +22,6 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
-import opennlp.tools.postag.POSModel;
-import opennlp.tools.postag.POSTaggerME;
-import opennlp.tools.tokenize.TokenizerME;
-import opennlp.tools.tokenize.TokenizerModel;
 
 /**
  * Loads the text from a file into its respective Tweets.
@@ -58,9 +54,6 @@ public class TweetLoader {
         int count = 0;
         String line = fileReader.readLine();
         
-        POSTaggerME posTagger = new POSTaggerME(new POSModel(new File("pos_learning_models/en-pos-maxent.bin")));
-        TokenizerME tokenizer = new TokenizerME(new TokenizerModel(new File("pos_learning_models/en-token.bin")));
-        
         while (line != null) {
             if (!line.equals("")) {
                 this.tweets[count] = new Tweet(this.fileName, count, line);
@@ -80,14 +73,13 @@ public class TweetLoader {
      * @throws IOException
      */
     public static int fileSize(String fileName) throws FileNotFoundException, IOException {
-        BufferedReader reader = new BufferedReader(new FileReader(fileName));
-        int lines = 0;
-
-        while (reader.readLine() != null) {
-            lines++;
+        int lines;
+        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
+            lines = 0;
+            while (reader.readLine() != null) {
+                lines++;
+            }
         }
-
-        reader.close();
         return lines;
     }
 

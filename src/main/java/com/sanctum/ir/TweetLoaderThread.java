@@ -27,8 +27,6 @@ import java.util.logging.Logger;
  */
 public class TweetLoaderThread extends Thread {
     
-    private int id;
-    private String fileName;
     private final PartialTweetLoader loader;
     public boolean done;
     
@@ -39,15 +37,12 @@ public class TweetLoaderThread extends Thread {
      * @param numTweets
      */
     public TweetLoaderThread(String fileName, int id, int numTweets) {
-        this.fileName = fileName;
-        this.id = id;
         this.loader = new PartialTweetLoader(fileName, id, numTweets);
         this.done = false;
     }
     
     @Override
     public void run() {
-        //System.out.println("Starting thread " + this.fileName + "_" + this.id);
         try {
             this.loader.readTweets();
             this.done = true;

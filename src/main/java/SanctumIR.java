@@ -33,6 +33,7 @@ import java.util.logging.Logger;
 public class SanctumIR extends javax.swing.JFrame {
     
     private boolean config;
+    ThreadedDataLoader loader = new ThreadedDataLoader(1);
     
     /**
      * Creates new form SanctumSearch
@@ -130,7 +131,6 @@ public class SanctumIR extends javax.swing.JFrame {
 
     private void btnIndexActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnIndexActionPerformed
         tweetDisplay.setText("");
-        ThreadedDataLoader loader = new ThreadedDataLoader(1);
         MapReducer reducer = new MapReducer(0, 0, 5);
         
         if (config) {
@@ -150,10 +150,14 @@ public class SanctumIR extends javax.swing.JFrame {
         tweetDisplay.setText("");
         
         if(!tweetSearch.getText().equals("") && tweetSearch.getText() != null) {
-            ArrayList<String> result = SearchIndex.search(tweetSearch.getText());
-            
-            for (String s : result) {
-                tweetDisplay.append(s + "\n");
+            try {
+                ArrayList<String> result = SearchIndex.search(tweetSearch.getText());
+                
+                for (String s : result) {
+                    tweetDisplay.append(s + "\n");
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(SanctumIR.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }//GEN-LAST:event_btnSearchActionPerformed

@@ -43,14 +43,23 @@ public class MapReducer {
     public static BlockingQueue<Mapper> mappers;
     private final ArrayList<Reducer> reducers;
     public static BlockingQueue<Mapper> mapperQueue;
+    private final int numMappers;
+    private final int reducersPerMapper;
+    private final int numWriters;
 
     /**
      * Constructor
+     * @param numMappers
+     * @param reducersPerMapper
+     * @param numWriters
      */
-    public MapReducer(int numMapper, int reducersPerMapper, int numWriters) {
+    public MapReducer(int numMappers, int reducersPerMapper, int numWriters) {
         MapReducer.mappers = new LinkedBlockingQueue();
         this.reducers = new ArrayList();
         MapReducer.mapperQueue = new ArrayBlockingQueue(10000);
+        this.numMappers = numMappers;
+        this.reducersPerMapper = reducersPerMapper;
+        this.numWriters = numWriters;
     }
 
     /**

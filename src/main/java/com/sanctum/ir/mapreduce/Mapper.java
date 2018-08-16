@@ -17,6 +17,7 @@
  */
 package com.sanctum.ir.mapreduce;
 
+import com.sanctum.ir.ThreadedDataLoader;
 import com.sanctum.ir.Tweet;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -60,9 +61,9 @@ public class Mapper extends Thread {
                 key = key.toLowerCase();
 
                 if (pairs.containsKey(key)) {
-                    pairs.put(key, t.getContainingFileName() + "(" + pairs.get(key).substring(pairs.get(key).indexOf("(") + 1, pairs.get(key).indexOf(")")) + ", " + t.getTweetIndex() + ")");
+                    pairs.put(key, ThreadedDataLoader.inverseStore.get(t.getContainingFileName()) + "(" + pairs.get(key).substring(pairs.get(key).indexOf("(") + 1, pairs.get(key).indexOf(")")) + ", " + t.getTweetIndex() + ")");
                 } else {
-                    pairs.put(key, t.getContainingFileName() + "(" + t.getTweetIndex() + ")");
+                    pairs.put(key, ThreadedDataLoader.inverseStore.get(t.getContainingFileName()) + "(" + t.getTweetIndex() + ")");
                 }
             }
         }

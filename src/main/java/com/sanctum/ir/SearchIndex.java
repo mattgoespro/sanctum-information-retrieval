@@ -42,8 +42,9 @@ public class SearchIndex {
      *
      * @param term
      * @return ArrayList
+     * @throws java.io.IOException
      */
-    public static ArrayList<String> search(String term) {
+    public static ArrayList<String> search(String term) throws IOException {
         ArrayList<String> result = new ArrayList();
         String docs = documents(term);
 
@@ -58,27 +59,22 @@ public class SearchIndex {
                 File ind = new File(Configuration.INDEX_SAVE_DIRECTORY + term.charAt(0) + "/" + term + ".txt");
 
                 if (ind.exists()) {
-                    try {
-                        PrintWriter writer = new PrintWriter(new FileWriter(ind));
-
-                        for (String doc : docsCopy) {
-                            writer.write(doc + "; ");
-                            writer.flush();
+                        try (PrintWriter writer = new PrintWriter(new FileWriter(ind))) {
+                            for (String doc : docsCopy) {
+                                writer.write(doc + "; ");
+                                writer.flush();
+                            }
+                            writer.close();
                         }
-
-                        writer.close();
-                    } catch (IOException ex) {
-                        Logger.getLogger(SearchIndex.class.getName()).log(Level.SEVERE, null, ex);
-                    }
                 } else {
                     System.out.println("No index for '" + term + "' exists.");
                     return result;
                 }
             }
 
-            for (int i = 0; i < documents.length; i++) {
-                String doc = documents[i].substring(0, documents[i].indexOf("("));
-                String[] lines = documents[i].substring(documents[i].indexOf("(") + 1, documents[i].indexOf(")")).split(", ");
+            for (String document : documents) {
+                String doc = ThreadedDataLoader.filePathStore.get(Integer.parseInt(document.substring(0, document.indexOf("("))));
+                String[] lines = document.substring(document.indexOf("(") + 1, document.indexOf(")")).split(", ");
                 try {
                     for (String t : getTweets(doc, lines)) {
                         result.add(t);

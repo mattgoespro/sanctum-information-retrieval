@@ -38,7 +38,7 @@ import org.apache.hadoop.fs.Path;
  */
 public class TagFilter {
 
-    private ArrayList<String> tagValueBlacklist;
+    private final ArrayList<String> tagValueBlacklist;
     private boolean inclMentions, inclHashtags, inclLinks;
 
     /**
@@ -58,19 +58,18 @@ public class TagFilter {
      * @throws FileNotFoundException
      */
     public void loadBlacklist(String fileSystemRoot) throws FileNotFoundException, IOException {
-        System.out.println(fileSystemRoot);
         if (!fileSystemRoot.startsWith("hdfs://")) {
-            Scanner scFile = new Scanner(new File("indexing_token_blacklist.cfg"));
-            String line;
-
-            while (scFile.hasNext()) {
-                line = scFile.nextLine();
-
-                if (!line.startsWith("#")) {
-                    this.tagValueBlacklist.add(line);
+            try (Scanner scFile = new Scanner(new File("indexing_token_blacklist.cfg"))) {
+                String line;
+                
+                while (scFile.hasNext()) {
+                    line = scFile.nextLine();
+                    
+                    if (!line.startsWith("#")) {
+                        this.tagValueBlacklist.add(line);
+                    }
                 }
             }
-            scFile.close();
         } else {
             String uri = fileSystemRoot + "/sanctum/indexing_token_blacklist.cfg";
             FileSystem sys = FileSystem.get(URI.create(uri), new Configuration());
