@@ -17,10 +17,7 @@
  */
 package com.sanctum.ir;
 
-import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -37,6 +34,7 @@ public class ThreadedDataLoader extends DataLoader {
 
     private final int threadsPerFile;
     private final ArrayList<TweetLoaderThread> threads;
+    public static int COLLECTION_SIZE;
 
     /**
      * Constructor
@@ -47,12 +45,6 @@ public class ThreadedDataLoader extends DataLoader {
         super();
         this.threads = new ArrayList();
         this.threadsPerFile = threadsPerFile;
-        
-        File dataPaths = new File("data_path_store.data");
-        
-        if(dataPaths.exists()) {
-            loadFilePathStore();
-        }
     }
 
     @Override
@@ -68,86 +60,58 @@ public class ThreadedDataLoader extends DataLoader {
 
         ArrayList<String> filePaths = new ArrayList();
         getFiles(dataFiles, filePaths, new TweetFileFilter());
-
+        ThreadedDataLoader.COLLECTION_SIZE = filePaths.size();
+        
         if (filePaths.isEmpty()) {
             System.out.println("Error: File paths could not be found.");
             return;
         }
 
-        System.out.println("Writing data paths...");
+        System.out.print("Writing data paths...");
         File dataPaths = new File("data_path_store.data");
 
         if (!dataPaths.exists()) {
+            System.out.println("done.");
+            writeFilePathStore(filePaths);
+        }
+        
+        System.out.println("using existing data paths file.");
+
+        // start threads
+        for (String path : filePaths) {
             try {
-                // start threads
-                try (PrintWriter writer = new PrintWriter(new FileWriter(new File("data_path_store.data")))) {
-                    for (String path : filePaths) {
-                        // write Integer-String key
-                        writer.println(inverseStore.get(path) + " " + path);
-                        writer.flush();
-                        
-                        try {
-                            int numLines = (int) Math.ceil(TweetLoader.fileSize(path));
-                            
-                            // skip empty files
-                            if (numLines == 0) {
-                                continue;
-                            }
-                            
-                            int tweetsPerThread = (int) Math.ceil((double) numLines / (double) this.threadsPerFile);
-                            
-                            // ensure there are always more tweets than threads
-                            if (tweetsPerThread >= 1) {
-                                for (int i = 0; i < this.threadsPerFile; i++) {
-                                    TweetLoaderThread t = new TweetLoaderThread(path, i, tweetsPerThread);
-                                    this.threads.add(t);
-                                    t.start();
-                                }
-                            } else {
-                                System.out.println("Error: You can't have that many threads.");
-                                return;
-                            }
-                            
-                        } catch (IOException ex) {
-                            Logger.getLogger(ThreadedDataLoader.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
-                    writer.close();
-                }
-                
-                while (!allDone()) {
-                    // do nothing
+                int numLines = (int) Math.ceil(TweetLoader.fileSize(path));
+
+                // skip empty files
+                if (numLines == 0) {
+                    continue;
                 }
 
-                System.out.println("Loading successful (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec)");
+                int tweetsPerThread = (int) Math.ceil((double) numLines / (double) this.threadsPerFile);
+
+                // ensure there are always more tweets than threads
+                if (tweetsPerThread >= 1) {
+                    for (int i = 0; i < this.threadsPerFile; i++) {
+                        TweetLoaderThread t = new TweetLoaderThread(path, i, tweetsPerThread);
+                        this.threads.add(t);
+                        t.start();
+                    }
+                } else {
+                    System.out.println("Error: You can't have that many threads.");
+                    return;
+                }
             } catch (IOException ex) {
                 Logger.getLogger(ThreadedDataLoader.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+
+        while (!allDone()) {
+            // do nothing
+        }
+
+        System.out.println("Loading successful (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec)");
     }
     
-    /**
-     * Loads the store containing the file path values.
-     */
-    private void loadFilePathStore() {
-        try {
-            BufferedReader reader = new BufferedReader(new FileReader("data_path_store.data"));
-            String line = reader.readLine();
-
-            while (line != null) {
-                int id = Integer.parseInt(line.substring(0, line.indexOf(" ")));
-                String path = line.substring(line.indexOf(" ") + 1);
-                ThreadedDataLoader.filePathStore.put(id, path);
-                ThreadedDataLoader.inverseStore.put(path, id);
-                line = reader.readLine();
-            }
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(ThreadedDataLoader.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(ThreadedDataLoader.class.getName()).log(Level.SEVERE, null, ex);
-        }
-    }
-
     /**
      * Checks if all threads have completed their tasks.
      *

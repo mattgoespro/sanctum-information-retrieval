@@ -17,7 +17,10 @@
  */
 package com.sanctum.ir;
 
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
@@ -46,6 +49,12 @@ public class DataLoader {
         DataLoader.filePathStore = new HashMap();
         DataLoader.inverseStore = new HashMap();
         this.filePathID = 0;
+
+        File dataPaths = new File("data_path_store.data");
+
+        if (dataPaths.exists()) {
+            loadFilePathStore();
+        }
     }
 
     /**
@@ -69,29 +78,28 @@ public class DataLoader {
             return;
         }
 
-        try {
-            System.out.println("Writing data paths...");
-            try (PrintWriter writer = new PrintWriter(new FileWriter(new File("data_path_store.data")))) {
-                for (String filePath : filePaths) {
-                    // write Integer-String key
-                    writer.println(inverseStore.get(filePath) + " " + filePath);
-                    writer.flush();
-                    
-                    TweetLoader l = new TweetLoader(filePath);
-                    try {
-                        l.readTweets();
-                        loaders.add(l);
-                    } catch (IOException ex) {
-                        Logger.getLogger(DataLoader.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-                writer.close();
-            }
+        System.out.print("Writing data paths...");
+        File dataPaths = new File("data_path_store.data");
 
-            System.out.println("Loading successful (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec)");
-        } catch (IOException ex) {
-            Logger.getLogger(DataLoader.class.getName()).log(Level.SEVERE, null, ex);
+        if (!dataPaths.exists()) {
+            System.out.println("done. Using existing data paths.");
+            writeFilePathStore(filePaths);
         }
+        
+        System.out.println("done");
+
+        for (String filePath : filePaths) {
+            TweetLoader l = new TweetLoader(filePath);
+            try {
+                l.readTweets();
+                loaders.add(l);
+            } catch (IOException ex) {
+                Logger.getLogger(DataLoader.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
+
+        System.out.println("Loading successful (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec)");
+
     }
 
     /**
@@ -111,6 +119,48 @@ public class DataLoader {
             filePathStore.put(filePathID, root.getAbsolutePath());
             inverseStore.put(root.getAbsolutePath(), filePathID);
             filePathID++;
+        }
+    }
+
+    /**
+     * Writes the file path store to a file.
+     *
+     * @param filePaths
+     */
+    protected void writeFilePathStore(ArrayList<String> filePaths) {
+        try (PrintWriter writer = new PrintWriter(new FileWriter(new File("data_path_store.data")))) {
+            for (String path : filePaths) {
+                // write Integer-String key
+                writer.println(inverseStore.get(path) + " " + path);
+                writer.flush();
+            }
+            writer.close();
+
+        } catch (IOException ex) {
+            Logger.getLogger(ThreadedDataLoader.class.getName()).log(Level.SEVERE, null, ex);
+        }
+    }
+
+    /**
+     * Loads the store containing the file path values.
+     */
+    private void loadFilePathStore() {
+        try {
+            BufferedReader reader = new BufferedReader(new FileReader("data_path_store.data"));
+            String line = reader.readLine();
+
+            while (line != null) {
+                int id = Integer.parseInt(line.substring(0, line.indexOf(" ")));
+                String path = line.substring(line.indexOf(" ") + 1);
+                ThreadedDataLoader.filePathStore.put(id, path);
+                ThreadedDataLoader.inverseStore.put(path, id);
+                line = reader.readLine();
+
+            }
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(ThreadedDataLoader.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(ThreadedDataLoader.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 

@@ -26,7 +26,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Scanner;
+import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -40,52 +42,55 @@ public class SearchIndex {
     /**
      * Returns all Tweets containing a specific term.
      *
-     * @param term
+     * @param terms
      * @return ArrayList
      * @throws java.io.IOException
      */
-    public static ArrayList<String> search(String term) throws IOException {
-        ArrayList<String> result = new ArrayList();
-        String docs = documents(term);
-
-        if (docs != null) {
+    public static Collection<String> search(String terms) throws IOException {
+        ArrayList<Collection<String>> results = new ArrayList();
+        String[] termArr = terms.split(" ");
+        String docs = documents(termArr);
+        
+        if (!docs.equals("")) {
             String[] documents = docs.split("; ");
-            String[] docsCopy = documents.clone();
             System.out.println(documents.length + " documents found.");
-            Arrays.sort(docsCopy, new DocumentComparator());
+            
+            if (termArr.length > 1) {
+                for (String document : documents) {
+                    Collection<String> result = new TreeSet<>();
+                    String doc = ThreadedDataLoader.filePathStore.get(Integer.parseInt(document.substring(0, document.indexOf("("))));
+                    String[] lines = document.substring(document.indexOf("(") + 1, document.indexOf(")")).split(", ");
 
-            if (!Arrays.equals(docsCopy, documents)) {
-                System.out.println("Documents not sorted. Writing documents in order.");
-                File ind = new File(Configuration.INDEX_SAVE_DIRECTORY + term.charAt(0) + "/" + term + ".txt");
-
-                if (ind.exists()) {
-                        try (PrintWriter writer = new PrintWriter(new FileWriter(ind))) {
-                            for (String doc : docsCopy) {
-                                writer.write(doc + "; ");
-                                writer.flush();
-                            }
-                            writer.close();
-                        }
-                } else {
-                    System.out.println("No index for '" + term + "' exists.");
-                    return result;
-                }
-            }
-
-            for (String document : documents) {
-                String doc = ThreadedDataLoader.filePathStore.get(Integer.parseInt(document.substring(0, document.indexOf("("))));
-                String[] lines = document.substring(document.indexOf("(") + 1, document.indexOf(")")).split(", ");
-                try {
                     for (String t : getTweets(doc, lines)) {
                         result.add(t);
                     }
-                } catch (IOException ex) {
-                    Logger.getLogger(SearchIndex.class.getName()).log(Level.SEVERE, null, ex);
+                    results.add(result);
                 }
+
+                for (int i = 1; i < results.size(); i++) {
+                    results.get(0).retainAll(results.get(i));
+                }
+
+                return results.get(0);
+            } else if (termArr.length == 1) {
+                Collection<String> result = new TreeSet<>();
+                for (String document : documents) {
+                    System.out.println(document);
+                    String doc = ThreadedDataLoader.filePathStore.get(Integer.parseInt(document.substring(0, document.indexOf("("))));
+                    System.out.println(doc);
+                    String[] lines = document.substring(document.indexOf("(") + 1, document.indexOf(")")).split(", ");
+
+                    for (String t : getTweets(doc, lines)) {
+                        result.add(t);
+                    }
+                }
+                
+                return result;
             }
+
         }
 
-        return result;
+        return null;
     }
 
     /**
@@ -129,26 +134,23 @@ public class SearchIndex {
     /**
      * Returns a list of documents for a term as a string.
      *
-     * @param term
+     * @param terms
      * @return String
      */
-    private static String documents(String term) {
-        System.out.println("Checking " + Configuration.INDEX_SAVE_DIRECTORY + term.charAt(0) + "/" + term + ".txt");
-        File ind = new File(Configuration.INDEX_SAVE_DIRECTORY + term.charAt(0) + "/" + term + ".txt");
+    private static String documents(String[] termsArr) {
+        String docs = "";
 
-        try {
-            Scanner scFile = new Scanner(ind);
-            String docs = "";
+        for (String term : termsArr) {
+            System.out.println("Checking " + Configuration.INDEX_SAVE_DIRECTORY + term.charAt(0) + "/" + term + ".index");
+            File ind = new File(Configuration.INDEX_SAVE_DIRECTORY + term.charAt(0) + "/" + term + ".index");
 
-            while (scFile.hasNextLine()) {
-                docs += scFile.nextLine();
+            try {
+                docs += new Scanner(ind).nextLine();
+            } catch (FileNotFoundException ex) {
+                return "";
             }
-
-            return docs;
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(SearchIndex.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        return null;
+        return docs;
     }
 }

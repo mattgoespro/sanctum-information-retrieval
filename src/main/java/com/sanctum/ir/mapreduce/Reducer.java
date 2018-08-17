@@ -54,7 +54,7 @@ public class Reducer extends Thread {
                     String togo = (String) m.get(k);
                     
                     if(hereVal.substring(0, hereVal.indexOf("(")).equalsIgnoreCase(togo.substring(0, togo.indexOf("(")))) {
-                        reducedPairs.put(key, hereVal.substring(0, hereVal.indexOf(")") - 1) + ", " + togo.substring(togo.indexOf("(") + 1, togo.indexOf(")") + 1));
+                        reducedPairs.put(key, hereVal.substring(0, hereVal.indexOf(")")) + ", " + togo.substring(togo.indexOf("(") + 1, togo.indexOf(")") + 1));
                     } else {
                         reducedPairs.put(key, reducedPairs.get(key) + "; " + m.get(k).toString());
                     }

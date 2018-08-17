@@ -132,13 +132,14 @@ public class MapReducer {
         for (HashMap m : mappings) {
             for (Object k : m.keySet()) {
                 String key = (String) k;
-
+                
                 if (finalMap.containsKey(key)) {
                     String hereVal = finalMap.get(key);
                     String togo = (String) m.get(k);
                     
                     if(hereVal.substring(0, hereVal.indexOf("(")).equalsIgnoreCase(togo.substring(0, togo.indexOf("(")))) {
-                        finalMap.put(key, hereVal.substring(0, hereVal.indexOf(")") - 1) + ", " + togo.substring(togo.indexOf("(") + 1, togo.indexOf(")") + 1));
+                        String finalVal = hereVal.substring(0, hereVal.indexOf(")")) + ", " + togo.substring(togo.indexOf("(") + 1, togo.indexOf(")") + 1);
+                        finalMap.put(key, finalVal);
                     } else {
                         finalMap.put(key, finalMap.get(key) + "; " + m.get(k).toString());
                     }
@@ -147,6 +148,12 @@ public class MapReducer {
                 }
             }
         }
+        
+        for(Object k : finalMap.keySet()) {
+            String key = (String) k;
+            setInverseDocumentFrequencies(finalMap, key);
+        }
+        
         System.out.println("done.");
         System.out.print("Writing index...");
         writeIndex(finalMap);
@@ -190,12 +197,31 @@ public class MapReducer {
 
             try {
                 key = key.length() > 30 ? key.substring(0, 30) : key;
-                writer = new PrintWriter(new BufferedWriter(new FileWriter(new File(Configuration.INDEX_SAVE_DIRECTORY + f + key.toLowerCase() + ".txt"))));
+                writer = new PrintWriter(new BufferedWriter(new FileWriter(new File(Configuration.INDEX_SAVE_DIRECTORY + f + key.toLowerCase() + ".index"))));
                 writer.println(finalMap.get(key));
                 writer.flush();
             } catch (IOException e) {}
 
         }
+    }
+    
+    /**
+     * Updates the term frequencies for each document.
+     * @param finalMap
+     * @param key 
+     */
+    private void setInverseDocumentFrequencies(HashMap<String, String> finalMap, String key) {
+        String[] docs = finalMap.get(key).split("; ");
+        String idfDocs = "";
+        
+        for(String doc : docs) {
+            double tf = doc.substring(doc.indexOf("(") + 1, doc.indexOf(")")).split(", ").length;
+            double idf = Math.log(((double)ThreadedDataLoader.COLLECTION_SIZE) / tf);
+            double tf_idf = tf * idf;
+            idfDocs += doc + "[" + Math.round(tf_idf * 100.0)/100.0 + "]; ";
+        }
+        
+        finalMap.put(key, idfDocs);
     }
 
 }

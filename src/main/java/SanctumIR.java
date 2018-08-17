@@ -5,6 +5,7 @@ import com.sanctum.ir.ThreadedDataLoader;
 import com.sanctum.ir.mapreduce.MapReducer;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -25,16 +26,15 @@ import java.util.logging.Logger;
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-
 /**
  *
  * @author Matt
  */
 public class SanctumIR extends javax.swing.JFrame {
-    
+
     private boolean config;
     ThreadedDataLoader loader = new ThreadedDataLoader(1);
-    
+
     /**
      * Creates new form SanctumSearch
      */
@@ -132,7 +132,7 @@ public class SanctumIR extends javax.swing.JFrame {
     private void btnIndexActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnIndexActionPerformed
         tweetDisplay.setText("");
         MapReducer reducer = new MapReducer(0, 0, 5);
-        
+
         if (config) {
             loader.loadData();
             reducer.mapreduce(loader);
@@ -148,13 +148,15 @@ public class SanctumIR extends javax.swing.JFrame {
 
     private void btnSearchActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnSearchActionPerformed
         tweetDisplay.setText("");
-        
-        if(!tweetSearch.getText().equals("") && tweetSearch.getText() != null) {
+
+        if (!tweetSearch.getText().equals("") && tweetSearch.getText() != null) {
             try {
-                ArrayList<String> result = SearchIndex.search(tweetSearch.getText());
-                
-                for (String s : result) {
-                    tweetDisplay.append(s + "\n");
+                Collection<String> result = SearchIndex.search(tweetSearch.getText());
+
+                if (result != null) {
+                    for (String s : result) {
+                        tweetDisplay.append(s + "\n");
+                    }
                 }
             } catch (IOException ex) {
                 Logger.getLogger(SanctumIR.class.getName()).log(Level.SEVERE, null, ex);
@@ -167,7 +169,9 @@ public class SanctumIR extends javax.swing.JFrame {
     }//GEN-LAST:event_tweetSearchFocusGained
 
     private void tweetSearchFocusLost(java.awt.event.FocusEvent evt) {//GEN-FIRST:event_tweetSearchFocusLost
-        if(tweetSearch.getText().equals("") || tweetSearch == null) tweetSearch.setText("Search...");
+        if (tweetSearch.getText().equals("") || tweetSearch == null) {
+            tweetSearch.setText("Search...");
+        }
     }//GEN-LAST:event_tweetSearchFocusLost
 
     /**
