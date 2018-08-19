@@ -184,10 +184,9 @@ public class MapReducer {
     private void writeIndex(HashMap<String, String> finalMap) throws IOException {
         File indexFolder = new File(Configuration.INDEX_SAVE_DIRECTORY);
         indexFolder.mkdir();
-        SortedSet<String> keys = new TreeSet<>(finalMap.keySet());
         PrintWriter writer;
 
-        for (String key : keys) {
+        for (String key : finalMap.keySet()) {
             String f = key.toLowerCase().charAt(0) + "/";
             File letterIndex = new File(Configuration.INDEX_SAVE_DIRECTORY + f);
 

@@ -84,12 +84,9 @@ public class SearchIndex {
                         result.add(t);
                     }
                 }
-                
                 return result;
             }
-
         }
-
         return null;
     }
 
@@ -145,7 +142,9 @@ public class SearchIndex {
             File ind = new File(Configuration.INDEX_SAVE_DIRECTORY + term.charAt(0) + "/" + term + ".index");
 
             try {
-                docs += new Scanner(ind).nextLine();
+                try (Scanner sc = new Scanner(ind)) {
+                    docs += sc.nextLine();
+                }
             } catch (FileNotFoundException ex) {
                 return "";
             }
