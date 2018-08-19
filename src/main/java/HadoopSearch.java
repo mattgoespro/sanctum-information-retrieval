@@ -36,20 +36,21 @@ public class HadoopSearch {
          */
         @Override
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-            String[] words = value.toString().split("; ");
+            String[] l = value.toString().split("\t");
+            
             Configuration conf = context.getConfiguration();
 
             for (int i = 0; i < context.getConfiguration().getInt("query length", 0); i++) {
-                if (words[0].equalsIgnoreCase(conf.get("term " + i))) {
+                if (l[0].equalsIgnoreCase(conf.get("term " + i))) {
                     String val = "";
+                    String[] words = l[1].split("; ");
                     
-                    for (int j = 0; j < words.length; j++) {
-                        String uri = "/sanctum/data/" + words[j];
+                    for (String word1 : words) {
+                        String uri = "/sanctum/data/" + word1;
                         FileSystem sys = FileSystem.get(URI.create(uri), new Configuration());
                         FSDataInputStream fs = sys.open(new Path(uri));
                         LineIterator lineIterator = IOUtils.lineIterator(fs, "UTF-8");
                         String line;
-                        
                         while (lineIterator.hasNext()) {
                             line = lineIterator.nextLine();
 
