@@ -1,5 +1,8 @@
 #!/bin/bash
 
+hdfs dfs -mkdir /sanctum
+hdfs dfs -mkdir /sanctum/output
+
 cd /opt
 
 if [ -f apache-maven-3.5.4-bin.tar.gz ]; then

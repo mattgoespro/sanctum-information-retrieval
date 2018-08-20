@@ -23,7 +23,6 @@ public class HadoopSearch {
 
     public static class SearchMapper extends Mapper<Object, Text, Text, Text> {
 
-        private static final Text DIRECTORY = new Text();
         private final Text word = new Text();
 
         /**
