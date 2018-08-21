@@ -30,78 +30,63 @@ import org.apache.hadoop.fs.Path;
 
 /**
  * Loads the IR configuration.
+ *
  * @author Matt
  */
 public class Configuration {
-    
-    private static final String KEY_DATA_DIRECTORY = "Twitter data directory", 
-            KEY_INDEXING_INCLUDE_HASHTAGS = "Include hashtags", 
+
+    private static final String KEY_DATA_DIRECTORY = "Twitter data directory",
+            KEY_INDEXING_INCLUDE_HASHTAGS = "Include hashtags",
             KEY_INDEXING_INCLUDE_MENTIONS = "Include mentions",
-            KEY_INDEXING_INCLUDE_LINKS = "Include links", 
-            KEY_INDEX_SAVE_DIRECTORY = "Inverted file save directory", 
+            KEY_INDEXING_INCLUDE_LINKS = "Include links",
+            KEY_INDEX_SAVE_DIRECTORY = "Inverted file save directory",
             KEY_FILESYSTEM_ROOT = "Filesystem root";
-    public static String DATA_DIRECTORY, 
-            INDEXING_INCLUDE_HASHTAGS, 
+    public static String DATA_DIRECTORY,
+            INDEXING_INCLUDE_HASHTAGS,
             INDEXING_INCLUDE_MENTIONS,
-            INDEXING_INCLUDE_LINKS, 
+            INDEXING_INCLUDE_LINKS,
             INDEX_SAVE_DIRECTORY,
             FILESYSTEM_ROOT;
-    
+
     /**
      * Loads the configuration. Returns true if successful.
+     *
      * @param hdfsRoot
      * @return boolean
      * @throws java.io.IOException
      */
     public static boolean loadConfiguration(String hdfsRoot) throws IOException {
-        if(!hdfsRoot.startsWith("hdfs://")) {
-            try {
-                Scanner scFile = new Scanner(new File("config.cfg"));
-                String line;
-                
-                while(scFile.hasNext()) {
-                    line = scFile.nextLine();
-                    if(line.startsWith("#") || line.startsWith(" ") || line.equals("") || line.startsWith("\n")) continue;
-                    
-                    String value = line.replaceAll("\\s+", "");
-                    value = value.substring(value.indexOf(":") + 1);
-                    
-                    if(line.startsWith(com.sanctum.ir.Configuration.KEY_DATA_DIRECTORY)) com.sanctum.ir.Configuration.DATA_DIRECTORY = value;
-                    else if(line.startsWith(com.sanctum.ir.Configuration.KEY_INDEXING_INCLUDE_HASHTAGS)) com.sanctum.ir.Configuration.INDEXING_INCLUDE_HASHTAGS = value;
-                    else if(line.startsWith(com.sanctum.ir.Configuration.KEY_INDEXING_INCLUDE_MENTIONS)) com.sanctum.ir.Configuration.INDEXING_INCLUDE_MENTIONS = value;
-                    else if(line.startsWith(com.sanctum.ir.Configuration.KEY_INDEXING_INCLUDE_LINKS)) com.sanctum.ir.Configuration.INDEXING_INCLUDE_LINKS = value;
-                    else if(line.startsWith(com.sanctum.ir.Configuration.KEY_INDEX_SAVE_DIRECTORY)) com.sanctum.ir.Configuration.INDEX_SAVE_DIRECTORY = value;
-                    else if(line.startsWith(com.sanctum.ir.Configuration.KEY_FILESYSTEM_ROOT)) com.sanctum.ir.Configuration.FILESYSTEM_ROOT = value;
-                    else return false;
-                }
-                
-                return true;
-            } catch (FileNotFoundException ex) {
+        Scanner scFile = new Scanner(new File("config.cfg"));
+        String line;
+
+        while (scFile.hasNext()) {
+            line = scFile.nextLine();
+            
+            if (line.startsWith("#") || line.startsWith(" ") || line.equals("") || line.startsWith("\n")) {
+                continue;
+            }
+
+            String value = line.replaceAll("\\s+", "");
+            value = value.substring(value.indexOf(":") + 1);
+
+            if (line.startsWith(com.sanctum.ir.Configuration.KEY_DATA_DIRECTORY)) {
+                com.sanctum.ir.Configuration.DATA_DIRECTORY = value;
+            } else if (line.startsWith(com.sanctum.ir.Configuration.KEY_INDEXING_INCLUDE_HASHTAGS)) {
+                com.sanctum.ir.Configuration.INDEXING_INCLUDE_HASHTAGS = value;
+            } else if (line.startsWith(com.sanctum.ir.Configuration.KEY_INDEXING_INCLUDE_MENTIONS)) {
+                com.sanctum.ir.Configuration.INDEXING_INCLUDE_MENTIONS = value;
+            } else if (line.startsWith(com.sanctum.ir.Configuration.KEY_INDEXING_INCLUDE_LINKS)) {
+                com.sanctum.ir.Configuration.INDEXING_INCLUDE_LINKS = value;
+            } else if (line.startsWith(com.sanctum.ir.Configuration.KEY_INDEX_SAVE_DIRECTORY)) {
+                com.sanctum.ir.Configuration.INDEX_SAVE_DIRECTORY = value;
+            } else if (line.startsWith(com.sanctum.ir.Configuration.KEY_FILESYSTEM_ROOT)) {
+                com.sanctum.ir.Configuration.FILESYSTEM_ROOT = value;
+            } else {
                 return false;
             }
-        } else {
-            String uri = hdfsRoot + "/sanctum/config.cfg";
-            FileSystem sys = FileSystem.get(URI.create(uri), new org.apache.hadoop.conf.Configuration());
-            FSDataInputStream fs = sys.open(new Path(uri));
-            LineIterator lineIterator = IOUtils.lineIterator(fs, "UTF-8");
-            String line;
-            while(lineIterator.hasNext()) {
-                line = lineIterator.nextLine();
-
-                if(line.startsWith("#") || line.startsWith(" ") || line.equals("") || line.startsWith("\n")) continue;
-                    
-                    String value = line.replaceAll("\\s+", "");
-                    value = value.substring(value.indexOf(":") + 1);
-                    
-                    if(line.startsWith(com.sanctum.ir.Configuration.KEY_DATA_DIRECTORY)) com.sanctum.ir.Configuration.DATA_DIRECTORY = value;
-                    else if(line.startsWith(com.sanctum.ir.Configuration.KEY_INDEXING_INCLUDE_HASHTAGS)) com.sanctum.ir.Configuration.INDEXING_INCLUDE_HASHTAGS = value;
-                    else if(line.startsWith(com.sanctum.ir.Configuration.KEY_INDEXING_INCLUDE_MENTIONS)) com.sanctum.ir.Configuration.INDEXING_INCLUDE_MENTIONS = value;
-                    else if(line.startsWith(com.sanctum.ir.Configuration.KEY_INDEXING_INCLUDE_LINKS)) com.sanctum.ir.Configuration.INDEXING_INCLUDE_LINKS = value;
-                    else if(line.startsWith(com.sanctum.ir.Configuration.KEY_INDEX_SAVE_DIRECTORY)) com.sanctum.ir.Configuration.INDEX_SAVE_DIRECTORY = value;
-                    else if(line.startsWith(com.sanctum.ir.Configuration.KEY_FILESYSTEM_ROOT)) com.sanctum.ir.Configuration.FILESYSTEM_ROOT = value;
-                    else return false;
-            }
-            return true;
         }
+
+        return true;
+
     }
 }

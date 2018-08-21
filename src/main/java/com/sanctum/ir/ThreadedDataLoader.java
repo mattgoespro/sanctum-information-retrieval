@@ -18,12 +18,7 @@
 package com.sanctum.ir;
 
 import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Multithreaded DataLoader class
@@ -31,10 +26,12 @@ import java.util.logging.Logger;
  * @author Matt
  */
 public class ThreadedDataLoader extends DataLoader {
-
+    
+    public static ArrayList<Tweet[]> data = new ArrayList();
+    public static int COLLECTION_SIZE = 0;
+    
     private final int threadsPerFile;
     private final ArrayList<TweetLoaderThread> threads;
-    public static int COLLECTION_SIZE;
 
     /**
      * Constructor
@@ -61,7 +58,7 @@ public class ThreadedDataLoader extends DataLoader {
         ArrayList<String> filePaths = new ArrayList();
         getFiles(dataFiles, filePaths, new TweetFileFilter());
         ThreadedDataLoader.COLLECTION_SIZE = filePaths.size();
-        
+
         if (filePaths.isEmpty()) {
             System.out.println("Error: File paths could not be found.");
             return;
@@ -73,36 +70,27 @@ public class ThreadedDataLoader extends DataLoader {
         if (!dataPaths.exists()) {
             System.out.println("done.");
             writeFilePathStore(filePaths);
+        } else {
+            System.out.println("using existing data paths file.");
         }
-        
-        System.out.println("using existing data paths file.");
 
         // start threads
         for (String path : filePaths) {
-            try {
-                int numLines = (int) Math.ceil(TweetLoader.fileSize(path));
 
-                // skip empty files
-                if (numLines == 0) {
-                    continue;
+            int tweetsPerThread = (int) Math.ceil((double) 60000 / (double) this.threadsPerFile);
+
+            // ensure there are always more tweets than threads
+            if (tweetsPerThread >= 1) {
+                for (int i = 0; i < this.threadsPerFile; i++) {
+                    TweetLoaderThread t = new TweetLoaderThread(path, i, tweetsPerThread);
+                    this.threads.add(t);
+                    t.start();
                 }
-
-                int tweetsPerThread = (int) Math.ceil((double) numLines / (double) this.threadsPerFile);
-
-                // ensure there are always more tweets than threads
-                if (tweetsPerThread >= 1) {
-                    for (int i = 0; i < this.threadsPerFile; i++) {
-                        TweetLoaderThread t = new TweetLoaderThread(path, i, tweetsPerThread);
-                        this.threads.add(t);
-                        t.start();
-                    }
-                } else {
-                    System.out.println("Error: You can't have that many threads.");
-                    return;
-                }
-            } catch (IOException ex) {
-                Logger.getLogger(ThreadedDataLoader.class.getName()).log(Level.SEVERE, null, ex);
+            } else {
+                System.out.println("Error: You can't have that many threads.");
+                return;
             }
+
         }
 
         while (!allDone()) {
@@ -111,7 +99,7 @@ public class ThreadedDataLoader extends DataLoader {
 
         System.out.println("Loading successful (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec)");
     }
-    
+
     /**
      * Checks if all threads have completed their tasks.
      *
@@ -125,39 +113,5 @@ public class ThreadedDataLoader extends DataLoader {
 
         return done;
     }
-
-    /**
-     * Returns all loaded Tweets.
-     *
-     * @return
-     */
-    public ArrayList<Tweet[]> getLoadedData() {
-        ArrayList<Tweet[]> data = new ArrayList();
-
-        for (TweetLoaderThread thread : this.threads) {
-            data.add(thread.getLoader().getTweets());
-        }
-
-        return data;
-    }
-
-    /**
-     * Test method. Writes all filtered Tweets to a file.
-     *
-     * @param fileName
-     * @throws IOException
-     */
-    public void writeTweets(String fileName) throws IOException {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(new File(fileName)))) {
-            for (Tweet[] tweets : getLoadedData()) {
-                for (int i = 0; i < tweets.length; i++) {
-                    if (tweets[i] != null) {
-                        writer.println(tweets[i].toString());
-                        writer.flush();
-                    }
-                }
-            }
-            writer.close();
-        }
-    }
+    
 }

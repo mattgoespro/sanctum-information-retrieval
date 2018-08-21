@@ -46,6 +46,7 @@ public class TweetLoaderThread extends Thread {
         try {
             this.loader.readTweets();
             this.done = true;
+            ThreadedDataLoader.data.add(loader.getTweets());
         } catch (IOException ex) {
             Logger.getLogger(TweetLoaderThread.class.getName()).log(Level.SEVERE, null, ex);
         }

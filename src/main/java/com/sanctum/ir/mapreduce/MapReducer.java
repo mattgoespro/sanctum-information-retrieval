@@ -21,15 +21,11 @@ import com.sanctum.ir.Configuration;
 import com.sanctum.ir.IndexWriter;
 import com.sanctum.ir.ThreadedDataLoader;
 import com.sanctum.ir.Tweet;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
@@ -44,21 +40,20 @@ public class MapReducer {
     public static BlockingQueue<Mapper> mappers;
     private final ArrayList<Reducer> reducers;
     public static BlockingQueue<Mapper> mapperQueue;
-    private final int numMappers;
+    public static HashMap<String, String> finalMap = new HashMap();
     private final int mappersPerReducer;
     private final int numWriters;
 
     /**
      * Constructor
-     * @param numMappers
+     *
      * @param mappersPerReducer
      * @param numWriters
      */
-    public MapReducer(int numMappers, int mappersPerReducer, int numWriters) {
+    public MapReducer(int mappersPerReducer, int numWriters) {
         MapReducer.mappers = new LinkedBlockingQueue();
         this.reducers = new ArrayList();
-        MapReducer.mapperQueue = new ArrayBlockingQueue(10000);
-        this.numMappers = numMappers;
+        MapReducer.mapperQueue = new ArrayBlockingQueue(100000000);
         this.mappersPerReducer = mappersPerReducer;
         this.numWriters = numWriters;
     }
@@ -69,18 +64,18 @@ public class MapReducer {
      * @param loader
      */
     public void mapreduce(ThreadedDataLoader loader) {
-        ArrayList<Tweet[]> data = loader.getLoadedData();
-        createMappers(data);
+        createMappers(ThreadedDataLoader.data);
         System.out.print("Started mapping and reducing...");
-        
+        long startTime = System.currentTimeMillis();
+
         while (!mappers.isEmpty() || !mapperQueue.isEmpty()) {
             if (mappers.isEmpty() && mapperQueue.size() < mappersPerReducer) {
                 ArrayList<HashMap> mappings = new ArrayList();
-                
-                while(!mapperQueue.isEmpty()) {
+
+                while (!mapperQueue.isEmpty()) {
                     mappings.add(mapperQueue.poll().getPairs());
                 }
-                
+
                 Reducer r = new Reducer(mappings, Configuration.INDEX_SAVE_DIRECTORY);
                 reducers.add(r);
                 r.start();
@@ -88,17 +83,17 @@ public class MapReducer {
 
             if (mapperQueue.size() >= mappersPerReducer) {
                 ArrayList<HashMap> mappings = new ArrayList();
-                
+
                 for (int i = 0; i < mappersPerReducer; i++) {
                     mappings.add(mapperQueue.poll().getPairs());
                 }
-                
+
                 Reducer r = new Reducer(mappings, Configuration.INDEX_SAVE_DIRECTORY);
                 reducers.add(r);
                 r.start();
             }
         }
-        System.out.println("done.");
+        System.out.println("done (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec)");
     }
 
     /**
@@ -121,8 +116,8 @@ public class MapReducer {
      */
     public void merge() throws IOException {
         System.out.print("Merging results...");
+        long startTime = System.currentTimeMillis();
         ArrayList<HashMap> mappings = new ArrayList();
-        HashMap<String, String> finalMap = new HashMap();
 
         // wait for all reducers to finish
         while (!doneReducing()) {
@@ -138,12 +133,12 @@ public class MapReducer {
         for (HashMap m : mappings) {
             for (Object k : m.keySet()) {
                 String key = (String) k;
-                
+
                 if (finalMap.containsKey(key)) {
                     String hereVal = finalMap.get(key);
                     String togo = (String) m.get(k);
-                    
-                    if(hereVal.substring(0, hereVal.indexOf("(")).equalsIgnoreCase(togo.substring(0, togo.indexOf("(")))) {
+
+                    if (hereVal.substring(0, hereVal.indexOf("(")).equalsIgnoreCase(togo.substring(0, togo.indexOf("(")))) {
                         String finalVal = hereVal.substring(0, hereVal.indexOf(")")) + ", " + togo.substring(togo.indexOf("(") + 1, togo.indexOf(")") + 1);
                         finalMap.put(key, finalVal);
                     } else {
@@ -154,16 +149,17 @@ public class MapReducer {
                 }
             }
         }
-        
-        for(Object k : finalMap.keySet()) {
+
+        for (Object k : finalMap.keySet()) {
             String key = (String) k;
             setInverseDocumentFrequencies(finalMap, key);
         }
-        
-        System.out.println("done.");
+
+        System.out.println("done (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec)");
         System.out.print("Writing index...");
-        writeIndex(finalMap);
-        System.out.println("done.");
+        startTime = System.currentTimeMillis();
+        writeIndex();
+        System.out.println("done (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec)");
         System.out.println("Indexing complete.");
     }
 
@@ -187,40 +183,42 @@ public class MapReducer {
      * @param finalMap
      * @throws IOException
      */
-    private void writeIndex(HashMap<String, String> finalMap) throws IOException {
+    private void writeIndex() throws IOException {
         File indexFolder = new File(Configuration.INDEX_SAVE_DIRECTORY);
         indexFolder.mkdir();
+
+        int cCopy = finalMap.size() / numWriters, c = 0;
+        ArrayList<String> keys = new ArrayList();
         
-        int writers = 0;
-        HashMap<String, String> tempMap = new HashMap();
-        
-        for(String key : finalMap.keySet()) {
-            if(writers == numWriters) {
-                new IndexWriter(tempMap).start();
-                writers = 0;
-                tempMap = new HashMap();
+        for (String k : finalMap.keySet()) {
+            if(c == cCopy) {
+                c = 0;
+                IndexWriter writer = new IndexWriter(keys);
+                writer.start();
+                keys = new ArrayList();
             }
-            tempMap.put(key, finalMap.get(key));
-            writers++;
+            keys.add(k);
+            c++;
         }
     }
-    
+
     /**
      * Updates the term frequencies for each document.
+     *
      * @param finalMap
-     * @param key 
+     * @param key
      */
     private void setInverseDocumentFrequencies(HashMap<String, String> finalMap, String key) {
         String[] docs = finalMap.get(key).split("; ");
         String idfDocs = "";
-        
-        for(String doc : docs) {
+
+        for (String doc : docs) {
             double tf = doc.substring(doc.indexOf("(") + 1, doc.indexOf(")")).split(", ").length;
-            double idf = Math.log(((double)ThreadedDataLoader.COLLECTION_SIZE) / tf);
+            double idf = Math.log(((double) ThreadedDataLoader.COLLECTION_SIZE) / tf);
             double tf_idf = tf * idf;
-            idfDocs += doc + "[" + Math.round(tf_idf * 100.0)/100.0 + "]; ";
+            idfDocs += doc + "[" + Math.round(tf_idf * 100.0) / 100.0 + "]; ";
         }
-        
+
         finalMap.put(key, idfDocs);
     }
 

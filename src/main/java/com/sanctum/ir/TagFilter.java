@@ -20,16 +20,9 @@ package com.sanctum.ir;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.Iterator;
-import org.apache.hadoop.conf.Configuration;
 import java.util.Scanner;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.LineIterator;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 
 /**
  * Class that is used to filter and process tags.
@@ -58,26 +51,11 @@ public class TagFilter {
      * @throws FileNotFoundException
      */
     public void loadBlacklist(String fileSystemRoot) throws FileNotFoundException, IOException {
-        if (!fileSystemRoot.startsWith("hdfs://")) {
-            try (Scanner scFile = new Scanner(new File("indexing_token_blacklist.cfg"))) {
-                String line;
-                
-                while (scFile.hasNext()) {
-                    line = scFile.nextLine();
-                    
-                    if (!line.startsWith("#")) {
-                        this.tagValueBlacklist.add(line);
-                    }
-                }
-            }
-        } else {
-            String uri = fileSystemRoot + "/sanctum/indexing_token_blacklist.cfg";
-            FileSystem sys = FileSystem.get(URI.create(uri), new Configuration());
-            FSDataInputStream fs = sys.open(new Path(uri));
-            LineIterator lineIterator = IOUtils.lineIterator(fs, "UTF-8");
+        try (Scanner scFile = new Scanner(new File("indexing_token_blacklist.cfg"))) {
             String line;
-            while(lineIterator.hasNext()) {
-                line = lineIterator.nextLine();
+
+            while (scFile.hasNext()) {
+                line = scFile.nextLine();
 
                 if (!line.startsWith("#")) {
                     this.tagValueBlacklist.add(line);
@@ -152,7 +130,7 @@ public class TagFilter {
         while (it.hasNext()) {
             String w = (String) it.next();
 
-            if(w != null) {
+            if (w != null) {
                 if ((w.startsWith("#") && !this.inclHashtags) || (w.startsWith("@") && !this.inclMentions) || (w.startsWith("http://") && !this.inclLinks)) {
                     it.remove();
                 } else if (this.tagValueBlacklist.contains(w)) {

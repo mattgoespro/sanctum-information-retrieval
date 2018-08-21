@@ -131,7 +131,7 @@ public class SanctumIR extends javax.swing.JFrame {
 
     private void btnIndexActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_btnIndexActionPerformed
         tweetDisplay.setText("");
-        MapReducer reducer = new MapReducer(0, 0, 5);
+        MapReducer reducer = new MapReducer(5, 5);
 
         if (config) {
             loader.loadData();

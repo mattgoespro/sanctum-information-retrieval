@@ -46,28 +46,21 @@ public class PartialTweetLoader extends TweetLoader {
 
     @Override
     public void readTweets() throws IOException {
-        if (this.numTweets == 0) {
-            return;
-        }
-
         this.tweets = new Tweet[this.numTweets];
         BufferedReader scFile = new BufferedReader(new FileReader(this.file));
         int startLine = this.id * this.numTweets;
         int endLine = startLine + this.numTweets - 1;
         int currLine = 0;
         int count = 0;
-        
+
         String line = scFile.readLine();
-        
+
         while (line != null) {
             if (currLine >= startLine) {
                 this.tweets[count] = new Tweet(this.fileName, currLine, line);
-                try {
-                    this.tweets[count].filter();
-                } catch (Exception e) {}
-
+                this.tweets[count].filter();
                 ++count;
-                
+
                 if (currLine == endLine) {
                     break;
                 }

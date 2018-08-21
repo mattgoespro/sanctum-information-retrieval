@@ -17,38 +17,39 @@
  */
 package com.sanctum.ir;
 
-import java.io.BufferedWriter;
+import com.sanctum.ir.mapreduce.MapReducer;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.PrintWriter;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 
 /**
- *
+ * Class used to write the Indices
  * @author Matt
  */
 public class IndexWriter extends Thread {
     
-    private HashMap<String, String> finalMap;
+    private final ArrayList<String> keys;
     
     /**
-     * Constructor
-     * @param tempMap 
+     * Constructor 
+     * @param keys
      */
-    public IndexWriter(HashMap<String, String> tempMap) {
-        this.finalMap = new HashMap();
+    public IndexWriter(ArrayList<String> keys) {
+        this.keys = new ArrayList(keys.size());
         
-        for (String key : tempMap.keySet()) {
-            finalMap.put(key, tempMap.get(key));
+        for (String k : keys) {
+            this.keys.add(k);
         }
     }
     
     @Override
     public void run() {
-        PrintWriter writer;
-
-        for (String key : finalMap.keySet()) {
+        FileWriter writer;
+        System.out.println("Starting writer...");
+        for (String key : keys) {
             String f = key.toLowerCase().charAt(0) + "/";
             File letterIndex = new File(Configuration.INDEX_SAVE_DIRECTORY + f);
 
@@ -57,11 +58,13 @@ public class IndexWriter extends Thread {
             }
 
             try {
-                key = key.length() > 30 ? key.substring(0, 30) : key;
-                writer = new PrintWriter(new BufferedWriter(new FileWriter(new File(Configuration.INDEX_SAVE_DIRECTORY + f + key.toLowerCase() + ".index"))));
-                writer.println(finalMap.get(key));
+                String keyDir = key.length() > 30 ? key.substring(0, 30) : key;
+                writer = new FileWriter(new File(Configuration.INDEX_SAVE_DIRECTORY + f + keyDir.toLowerCase() + ".index"));
+                writer.write(MapReducer.finalMap.get(key));
                 writer.flush();
+                writer.close();
             } catch (IOException e) {}
         }
+        System.out.println("Writer complete.");
     }
 }
