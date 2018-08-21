@@ -17,10 +17,51 @@
  */
 package com.sanctum.ir;
 
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.HashMap;
+
 /**
  *
  * @author Matt
  */
 public class IndexWriter extends Thread {
     
+    private HashMap<String, String> finalMap;
+    
+    /**
+     * Constructor
+     * @param tempMap 
+     */
+    public IndexWriter(HashMap<String, String> tempMap) {
+        this.finalMap = new HashMap();
+        
+        for (String key : tempMap.keySet()) {
+            finalMap.put(key, tempMap.get(key));
+        }
+    }
+    
+    @Override
+    public void run() {
+        PrintWriter writer;
+
+        for (String key : finalMap.keySet()) {
+            String f = key.toLowerCase().charAt(0) + "/";
+            File letterIndex = new File(Configuration.INDEX_SAVE_DIRECTORY + f);
+
+            if (!letterIndex.exists()) {
+                letterIndex.mkdir();
+            }
+
+            try {
+                key = key.length() > 30 ? key.substring(0, 30) : key;
+                writer = new PrintWriter(new BufferedWriter(new FileWriter(new File(Configuration.INDEX_SAVE_DIRECTORY + f + key.toLowerCase() + ".index"))));
+                writer.println(finalMap.get(key));
+                writer.flush();
+            } catch (IOException e) {}
+        }
+    }
 }

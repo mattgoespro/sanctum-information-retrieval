@@ -18,6 +18,7 @@
 package com.sanctum.ir.mapreduce;
 
 import com.sanctum.ir.Configuration;
+import com.sanctum.ir.IndexWriter;
 import com.sanctum.ir.ThreadedDataLoader;
 import com.sanctum.ir.Tweet;
 import java.io.BufferedWriter;
@@ -44,21 +45,21 @@ public class MapReducer {
     private final ArrayList<Reducer> reducers;
     public static BlockingQueue<Mapper> mapperQueue;
     private final int numMappers;
-    private final int reducersPerMapper;
+    private final int mappersPerReducer;
     private final int numWriters;
 
     /**
      * Constructor
      * @param numMappers
-     * @param reducersPerMapper
+     * @param mappersPerReducer
      * @param numWriters
      */
-    public MapReducer(int numMappers, int reducersPerMapper, int numWriters) {
+    public MapReducer(int numMappers, int mappersPerReducer, int numWriters) {
         MapReducer.mappers = new LinkedBlockingQueue();
         this.reducers = new ArrayList();
         MapReducer.mapperQueue = new ArrayBlockingQueue(10000);
         this.numMappers = numMappers;
-        this.reducersPerMapper = reducersPerMapper;
+        this.mappersPerReducer = mappersPerReducer;
         this.numWriters = numWriters;
     }
 
@@ -73,20 +74,25 @@ public class MapReducer {
         System.out.print("Started mapping and reducing...");
         
         while (!mappers.isEmpty() || !mapperQueue.isEmpty()) {
-            // if all mappers done and 1 mapper in queue
-            if (mappers.isEmpty() && mapperQueue.size() == 1) {
+            if (mappers.isEmpty() && mapperQueue.size() < mappersPerReducer) {
                 ArrayList<HashMap> mappings = new ArrayList();
-                mappings.add(mapperQueue.poll().getPairs());
+                
+                while(!mapperQueue.isEmpty()) {
+                    mappings.add(mapperQueue.poll().getPairs());
+                }
+                
                 Reducer r = new Reducer(mappings, Configuration.INDEX_SAVE_DIRECTORY);
                 reducers.add(r);
                 r.start();
             }
 
-            // if 2 mappers in queue, create reducer
-            if (mapperQueue.size() >= 2) {
+            if (mapperQueue.size() >= mappersPerReducer) {
                 ArrayList<HashMap> mappings = new ArrayList();
-                mappings.add(mapperQueue.poll().getPairs());
-                mappings.add(mapperQueue.poll().getPairs());
+                
+                for (int i = 0; i < mappersPerReducer; i++) {
+                    mappings.add(mapperQueue.poll().getPairs());
+                }
+                
                 Reducer r = new Reducer(mappings, Configuration.INDEX_SAVE_DIRECTORY);
                 reducers.add(r);
                 r.start();
@@ -184,23 +190,18 @@ public class MapReducer {
     private void writeIndex(HashMap<String, String> finalMap) throws IOException {
         File indexFolder = new File(Configuration.INDEX_SAVE_DIRECTORY);
         indexFolder.mkdir();
-        PrintWriter writer;
-
-        for (String key : finalMap.keySet()) {
-            String f = key.toLowerCase().charAt(0) + "/";
-            File letterIndex = new File(Configuration.INDEX_SAVE_DIRECTORY + f);
-
-            if (!letterIndex.exists()) {
-                letterIndex.mkdir();
+        
+        int writers = 0;
+        HashMap<String, String> tempMap = new HashMap();
+        
+        for(String key : finalMap.keySet()) {
+            if(writers == numWriters) {
+                new IndexWriter(tempMap).start();
+                writers = 0;
+                tempMap = new HashMap();
             }
-
-            try {
-                key = key.length() > 30 ? key.substring(0, 30) : key;
-                writer = new PrintWriter(new BufferedWriter(new FileWriter(new File(Configuration.INDEX_SAVE_DIRECTORY + f + key.toLowerCase() + ".index"))));
-                writer.println(finalMap.get(key));
-                writer.flush();
-            } catch (IOException e) {}
-
+            tempMap.put(key, finalMap.get(key));
+            writers++;
         }
     }
     

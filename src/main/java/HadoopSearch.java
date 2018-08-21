@@ -39,8 +39,8 @@ public class HadoopSearch {
             
             Configuration conf = context.getConfiguration();
 
-            for (int i = 0; i < context.getConfiguration().getInt("query length", 0); i++) {
-                if (l[0].equalsIgnoreCase(conf.get("term " + i))) {
+            for (int i = 0; i < Integer.parseInt(context.getConfiguration().get("querylength")); i++) {
+                if (l[0].equalsIgnoreCase(conf.get("term" + i))) {
                     String val = "";
                     String[] words = l[1].split("; ");
                     
@@ -61,7 +61,7 @@ public class HadoopSearch {
                     }
                     
                     word.set(val);
-                    context.write(word, null);
+                    context.write(word, new Text());
                 }
             }
         }
@@ -74,14 +74,22 @@ public class HadoopSearch {
         @Override
         public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
             result.set(key);
-            context.write(result, null);
+            context.write(result, new Text());
         }
     }
 
     public static void main(String[] args) throws Exception {
+        System.out.println(args.length);
         Configuration conf = new Configuration();
+
+        // set arguments in config
+        conf.set("querylength", args.length + "");
+        for (int i = 0; i < args.length; i++) {
+            conf.set("term" + i, args[i]);
+        }
+
         Job job = Job.getInstance(conf, "query search");
-        job.setJarByClass(HadoopMain.class);
+        job.setJarByClass(HadoopSearch.class);
         job.setMapperClass(SearchMapper.class);
         job.setCombinerClass(SearchReducer.class);
         job.setReducerClass(SearchReducer.class);
@@ -89,13 +97,6 @@ public class HadoopSearch {
         job.setOutputValueClass(Text.class);
         FileInputFormat.addInputPath(job, new Path("/sanctum/output"));
         FileOutputFormat.setOutputPath(job, new Path("/sanctum/output/searchresults"));
-
-        // set arguments in config
-        conf.setInt("query length", args.length);
-        for (int i = 0; i < args.length; i++) {
-            conf.set("term " + i, args[i]);
-        }
-
         System.exit(job.waitForCompletion(true) ? 0 : 1);
     }
 }
