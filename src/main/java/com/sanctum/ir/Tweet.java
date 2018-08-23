@@ -133,7 +133,7 @@ public class Tweet {
         // retrieve links
         if (filter.includesLinks()) {
             for (String word : tokenizedRawText) {
-                if (word.startsWith("://")) {
+                if (word.startsWith("http://")) {
                     this.links.add(word);
                 }
             }

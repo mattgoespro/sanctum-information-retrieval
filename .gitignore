@@ -1,4 +1,5 @@
 downloads/
 index/
 twitter_sample/
-/target/
+target/
+tweet_documents/

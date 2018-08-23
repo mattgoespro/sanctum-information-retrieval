@@ -17,8 +17,13 @@
  */
 package com.sanctum.ir;
 
+import static com.sanctum.ir.DataLoader.filePathID;
+import static com.sanctum.ir.DataLoader.filePathStore;
+import static com.sanctum.ir.DataLoader.inverseStore;
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 
 /**
@@ -27,7 +32,7 @@ import java.io.IOException;
  * @author Matt
  */
 public class PartialTweetLoader extends TweetLoader {
-
+    
     private final int id;
     private final int numTweets;
 
@@ -57,8 +62,10 @@ public class PartialTweetLoader extends TweetLoader {
 
         while (line != null) {
             if (currLine >= startLine) {
-                this.tweets[count] = new Tweet(this.fileName, currLine, line);
+                String docName = writeTweetDocument(line);
+                this.tweets[count] = new Tweet(docName, currLine, line);
                 this.tweets[count].filter();
+                
                 ++count;
 
                 if (currLine == endLine) {
@@ -68,6 +75,27 @@ public class PartialTweetLoader extends TweetLoader {
             ++currLine;
             line = scFile.readLine();
         }
+    }
+    
+    /**
+     * Writes a text document containing a single tweet, and returns the file name.
+     * @param line
+     * @return String
+     */
+    private String writeTweetDocument(String line) throws IOException {
+        String docName = "tweet_" + line.hashCode();
+        File f = new File("tweet_documents/" + docName);
+        
+        try (FileWriter docWriter = new FileWriter(f)) {
+            docWriter.write(line);
+            filePathStore.put(filePathID, f.getAbsolutePath());
+            inverseStore.put(f.getAbsolutePath(), filePathID);
+            
+            synchronized(this) {
+                filePathID++;
+            }
+        }
+        return f.getAbsolutePath();
     }
 
 }

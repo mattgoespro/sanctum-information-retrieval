@@ -28,7 +28,7 @@ import java.util.HashMap;
 public class Reducer extends Thread {
 
     private final ArrayList<HashMap> mappings;
-    private final HashMap<String, String> reducedPairs;
+    private final HashMap<String, ArrayList<Integer>> reducedPairs;
     public volatile boolean done = false;
 
     /**
@@ -50,16 +50,9 @@ public class Reducer extends Thread {
                 key = key.toLowerCase();
                 
                 if (reducedPairs.containsKey(key)) {
-                    String hereVal = reducedPairs.get(key);
-                    String togo = (String) m.get(k);
-                    
-                    if(hereVal.substring(0, hereVal.indexOf("(")).equalsIgnoreCase(togo.substring(0, togo.indexOf("(")))) {
-                        reducedPairs.put(key, hereVal.substring(0, hereVal.indexOf(")")) + ", " + togo.substring(togo.indexOf("(") + 1, togo.indexOf(")") + 1));
-                    } else {
-                        reducedPairs.put(key, reducedPairs.get(key) + "; " + m.get(k).toString());
-                    }
+                    reducedPairs.get(key).addAll((ArrayList<Integer>) m.get(k));
                 } else {
-                    reducedPairs.put(key, m.get(k).toString());
+                    reducedPairs.put(key, (ArrayList<Integer>) m.get(k));
                 }
             }
         }
@@ -71,7 +64,7 @@ public class Reducer extends Thread {
      * Returns the result of the reduction.
      * @return HashMap
      */
-    public HashMap<String, String> getReducedPairs() {
+    public HashMap<String, ArrayList<Integer>> getReducedPairs() {
         return this.reducedPairs;
     }
 }

@@ -55,27 +55,20 @@ public class ThreadedDataLoader extends DataLoader {
             return;
         }
 
-        ArrayList<String> filePaths = new ArrayList();
-        getFiles(dataFiles, filePaths, new TweetFileFilter());
-        ThreadedDataLoader.COLLECTION_SIZE = filePaths.size();
+        ArrayList<String> srcFilePaths = new ArrayList();
+        getSourceFiles(dataFiles, srcFilePaths);
 
-        if (filePaths.isEmpty()) {
+        if (srcFilePaths.isEmpty()) {
             System.out.println("Error: File paths could not be found.");
             return;
         }
 
-        System.out.print("Writing data paths...");
-        File dataPaths = new File("data_path_store.data");
-
-        if (!dataPaths.exists()) {
-            System.out.println("done.");
-            writeFilePathStore(filePaths);
-        } else {
-            System.out.println("using existing data paths file.");
-        }
-
+        // create folder for tweet documents to be written to
+        File f = new File("tweet_documents/");
+        f.mkdir();
+        
         // start threads
-        for (String path : filePaths) {
+        for (String path : srcFilePaths) {
 
             int tweetsPerThread = (int) Math.ceil((double) 60000 / (double) this.threadsPerFile);
 
@@ -92,11 +85,23 @@ public class ThreadedDataLoader extends DataLoader {
             }
 
         }
-
+        
         while (!allDone()) {
             // do nothing
         }
-
+        
+        System.out.print("Writing data paths...");
+        File dataPaths = new File("data_path_store.data");
+        ArrayList<String> tweetDocPaths = new ArrayList();
+        getSourceFiles(f, tweetDocPaths);
+        ThreadedDataLoader.COLLECTION_SIZE = tweetDocPaths.size();
+        if (!dataPaths.exists()) {
+            System.out.println("done.");
+            writeFilePathStore(tweetDocPaths);
+        } else {
+            System.out.println("using existing data paths file.");
+        }
+        
         System.out.println("Loading successful (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec)");
     }
 

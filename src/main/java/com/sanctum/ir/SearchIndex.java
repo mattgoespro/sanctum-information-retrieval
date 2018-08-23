@@ -17,18 +17,93 @@
  */
 package com.sanctum.ir;
 
-import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
+import java.util.HashMap;
 import java.util.Scanner;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+
+/**
+ * Class used to sort documents using tf-idf weightings.
+ *
+ * @author Matt
+ */
+class DocumentComparator implements Comparator {
+
+    private String[] queryTerms;
+
+    /**
+     * Constructor
+     *
+     * @param queryTerms
+     */
+    public DocumentComparator(String[] queryTerms) {
+        this.queryTerms = queryTerms;
+    }
+
+    @Override
+    public int compare(Object o1, Object o2) {
+        if (o1 instanceof String && o2 instanceof String) {
+            String doc1 = (String) o1, doc2 = (String) o2;
+            
+            double score1 = 0, score2 = 0;
+            
+            for (String term : queryTerms) {
+                score1 += getTfIdf(doc1, term);
+                score2 += getTfIdf(doc2, term);
+            }
+            
+            if(score1 == score2) {
+                System.out.println("docs equal");
+                return 0;
+            } else if (score1 > score2) {
+                System.out.println("doc1 more");
+                return 1;
+            } else {
+                System.out.println("doc2 more");
+                return -1;
+            }
+        }
+        
+        return -1;
+    }
+    
+    /**
+     * Returns the tf-idf score for a term in a document.
+     * @param doc
+     * @param term
+     * @return double
+     */
+    private double getTfIdf(String doc, String term) {
+        try {
+            File f = new File(ThreadedDataLoader.filePathStore.get(Integer.parseInt(doc)));
+            Scanner scFile = new Scanner(f);
+            Tweet t = new Tweet("", 0, scFile.nextLine());
+            t.filter();
+            
+            int tf = 0;
+            
+            for (String word : t.getWords()) {
+                if (word.equalsIgnoreCase(term)) {
+                    tf++;
+                }
+            }
+            
+            double idf = Math.log(((double) ThreadedDataLoader.COLLECTION_SIZE) / (double)tf);
+            return tf * idf;
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(DocumentComparator.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return 0;
+    }
+}
 
 /**
  * Class used to retrieve Tweets from the index.
@@ -36,6 +111,8 @@ import java.util.logging.Logger;
  * @author Matt
  */
 public class SearchIndex {
+
+    public static HashMap<Integer, Tweet> tweetHash = new HashMap();
 
     /**
      * Returns all Tweets containing a specific term.
@@ -47,21 +124,21 @@ public class SearchIndex {
     public static Collection<String> search(String terms) throws IOException {
         ArrayList<Collection<String>> results = new ArrayList();
         String[] termArr = terms.split(" ");
-        String docs = documents(termArr);
-        
-        if (!docs.equals("")) {
-            String[] documents = docs.split("; ");
-            System.out.println(documents.length + " documents found.");
-            
+        ArrayList<String> documents = documents(termArr);
+        rankDocuments(documents, termArr);
+
+        if (!documents.isEmpty()) {
+            System.out.println(documents.size() + " documents found.");
+
             if (termArr.length > 1) {
                 for (String document : documents) {
                     Collection<String> result = new TreeSet<>();
-                    String doc = ThreadedDataLoader.filePathStore.get(Integer.parseInt(document.substring(0, document.indexOf("("))));
-                    String[] lines = document.substring(document.indexOf("(") + 1, document.indexOf(")")).split(", ");
+                    String doc = ThreadedDataLoader.filePathStore.get(Integer.parseInt(document));
 
-                    for (String t : getTweets(doc, lines)) {
-                        result.add(t);
+                    try (Scanner tweetDocScanner = new Scanner(new File(doc))) {
+                        result.add(tweetDocScanner.nextLine());
                     }
+
                     results.add(result);
                 }
 
@@ -72,56 +149,16 @@ public class SearchIndex {
                 return results.get(0);
             } else if (termArr.length == 1) {
                 Collection<String> result = new TreeSet<>();
-                for (String document : documents) {
-                    System.out.println(document);
-                    String doc = ThreadedDataLoader.filePathStore.get(Integer.parseInt(document.substring(0, document.indexOf("("))));
-                    System.out.println(doc);
-                    String[] lines = document.substring(document.indexOf("(") + 1, document.indexOf(")")).split(", ");
 
-                    for (String t : getTweets(doc, lines)) {
-                        result.add(t);
+                for (String document : documents) {
+                    String doc = ThreadedDataLoader.filePathStore.get(Integer.parseInt(document));
+
+                    try (Scanner tweetDocScanner = new Scanner(new File(doc))) {
+                        result.add(tweetDocScanner.nextLine());
                     }
                 }
                 return result;
             }
-        }
-        return null;
-    }
-
-    /**
-     * Returns the Tweet text for a document on a specific line.
-     *
-     * @param doc
-     * @param line
-     * @return String
-     */
-    private static ArrayList<String> getTweets(String doc, String[] lines) throws IOException {
-        try {
-            BufferedReader scFile = new BufferedReader(new FileReader(new File(doc)));
-            Arrays.sort(lines);
-            int currLine = 0, stopIndex = 0;
-            int nextStop = Integer.parseInt(lines[0]);
-            ArrayList<String> retrieved = new ArrayList();
-            String l = scFile.readLine();
-
-            while (l != null) {
-                if (currLine == nextStop) {
-                    retrieved.add(l);
-                    ++stopIndex;
-
-                    if (stopIndex == lines.length) {
-                        break;
-                    }
-
-                    nextStop = Integer.parseInt(lines[stopIndex]);
-                }
-                l = scFile.readLine();
-                ++currLine;
-            }
-
-            return retrieved;
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(SearchIndex.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
     }
@@ -132,8 +169,8 @@ public class SearchIndex {
      * @param terms
      * @return String
      */
-    private static String documents(String[] termsArr) {
-        String docs = "";
+    private static ArrayList<String> documents(String[] termsArr) {
+        ArrayList<String> docs = new ArrayList();
 
         for (String term : termsArr) {
             System.out.println("Checking " + Configuration.INDEX_SAVE_DIRECTORY + term.charAt(0) + "/" + term + ".index");
@@ -141,13 +178,30 @@ public class SearchIndex {
 
             try {
                 try (Scanner sc = new Scanner(ind)) {
-                    docs += sc.nextLine();
+                    while (sc.hasNextLine()) {
+                        String line = sc.nextLine();
+
+                        if (!line.equals("")) {
+                            docs.add(line);
+                        }
+                    }
                 }
             } catch (FileNotFoundException ex) {
-                return "";
             }
         }
 
         return docs;
+    }
+
+    /**
+     * Updates the term frequencies for each document.
+     *
+     * @param finalMap
+     * @param key
+     */
+    private static void rankDocuments(ArrayList<String> documents, String[] query) {
+        String[] docs = new String[documents.size()];
+        documents.toArray(docs);
+        Arrays.sort(docs, new DocumentComparator(query));
     }
 }

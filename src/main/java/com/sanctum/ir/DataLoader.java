@@ -37,22 +37,19 @@ import java.util.logging.Logger;
 public class DataLoader {
 
     protected ArrayList<TweetLoader> loaders;
-    public static HashMap<Integer, String> filePathStore;
-    public static HashMap<String, Integer> inverseStore;
-    private int filePathID;
+    public static HashMap<Integer, String> filePathStore = new HashMap();
+    public static HashMap<String, Integer> inverseStore = new HashMap();
+    public static int filePathID = 0;
 
     /**
      * Constructor
      */
     public DataLoader() {
         this.loaders = new ArrayList();
-        DataLoader.filePathStore = new HashMap();
-        DataLoader.inverseStore = new HashMap();
-        this.filePathID = 0;
-
-        File dataPaths = new File("data_path_store.data");
-
-        if (dataPaths.exists()) {
+        
+        File pathStore = new File("data_path_store.data");
+        
+        if(pathStore.exists()) {
             loadFilePathStore();
         }
     }
@@ -71,7 +68,7 @@ public class DataLoader {
         }
 
         ArrayList<String> filePaths = new ArrayList();
-        getFiles(dataFiles, filePaths, new TweetFileFilter());
+        getSourceFiles(dataFiles, filePaths);
 
         if (filePaths.isEmpty()) {
             System.out.println("Error: File paths could not be found.");
@@ -107,18 +104,15 @@ public class DataLoader {
      *
      * @param root
      * @param paths
-     * @param filter
      */
-    protected void getFiles(File root, ArrayList<String> paths, TweetFileFilter filter) {
+    protected void getSourceFiles(File root, ArrayList<String> paths) {
         if (root.isDirectory()) {
-            for (File child : root.listFiles(filter)) {
-                getFiles(child, paths, filter);
+            for (File child : root.listFiles()) {
+                getSourceFiles(child, paths);
             }
         } else {
-            paths.add(root.getAbsolutePath());
-            filePathStore.put(filePathID, root.getAbsolutePath());
-            inverseStore.put(root.getAbsolutePath(), filePathID);
-            filePathID++;
+            if(!root.getName().equalsIgnoreCase("index.html"))
+                paths.add(root.getAbsolutePath());
         }
     }
 
@@ -155,7 +149,6 @@ public class DataLoader {
                 ThreadedDataLoader.filePathStore.put(id, path);
                 ThreadedDataLoader.inverseStore.put(path, id);
                 line = reader.readLine();
-
             }
         } catch (FileNotFoundException ex) {
             Logger.getLogger(ThreadedDataLoader.class.getName()).log(Level.SEVERE, null, ex);

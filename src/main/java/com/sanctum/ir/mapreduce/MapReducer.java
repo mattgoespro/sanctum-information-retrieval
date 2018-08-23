@@ -22,7 +22,6 @@ import com.sanctum.ir.IndexWriter;
 import com.sanctum.ir.ThreadedDataLoader;
 import com.sanctum.ir.Tweet;
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -40,7 +39,7 @@ public class MapReducer {
     public static BlockingQueue<Mapper> mappers;
     private final ArrayList<Reducer> reducers;
     public static BlockingQueue<Mapper> mapperQueue;
-    public static HashMap<String, String> finalMap = new HashMap();
+    public static HashMap<String, ArrayList<Integer>> finalMap = new HashMap();
     private final int mappersPerReducer;
     private final int numWriters;
 
@@ -133,26 +132,14 @@ public class MapReducer {
         for (HashMap m : mappings) {
             for (Object k : m.keySet()) {
                 String key = (String) k;
-
+                key = key.toLowerCase();
+                
                 if (finalMap.containsKey(key)) {
-                    String hereVal = finalMap.get(key);
-                    String togo = (String) m.get(k);
-
-                    if (hereVal.substring(0, hereVal.indexOf("(")).equalsIgnoreCase(togo.substring(0, togo.indexOf("(")))) {
-                        String finalVal = hereVal.substring(0, hereVal.indexOf(")")) + ", " + togo.substring(togo.indexOf("(") + 1, togo.indexOf(")") + 1);
-                        finalMap.put(key, finalVal);
-                    } else {
-                        finalMap.put(key, finalMap.get(key) + "; " + m.get(k).toString());
-                    }
+                    finalMap.get(key).addAll((ArrayList<Integer>) m.get(k));
                 } else {
-                    finalMap.put(key, m.get(k).toString());
+                    finalMap.put(key, (ArrayList<Integer>) m.get(k));
                 }
             }
-        }
-
-        for (Object k : finalMap.keySet()) {
-            String key = (String) k;
-            setInverseDocumentFrequencies(finalMap, key);
         }
 
         System.out.println("done (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec)");
@@ -201,25 +188,4 @@ public class MapReducer {
             c++;
         }
     }
-
-    /**
-     * Updates the term frequencies for each document.
-     *
-     * @param finalMap
-     * @param key
-     */
-    private void setInverseDocumentFrequencies(HashMap<String, String> finalMap, String key) {
-        String[] docs = finalMap.get(key).split("; ");
-        String idfDocs = "";
-
-        for (String doc : docs) {
-            double tf = doc.substring(doc.indexOf("(") + 1, doc.indexOf(")")).split(", ").length;
-            double idf = Math.log(((double) ThreadedDataLoader.COLLECTION_SIZE) / tf);
-            double tf_idf = tf * idf;
-            idfDocs += doc + "[" + Math.round(tf_idf * 100.0) / 100.0 + "]; ";
-        }
-
-        finalMap.put(key, idfDocs);
-    }
-
 }

@@ -22,8 +22,6 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
 
 /**
  * Class used to write the Indices
@@ -48,7 +46,7 @@ public class IndexWriter extends Thread {
     @Override
     public void run() {
         FileWriter writer;
-        System.out.println("Starting writer...");
+        
         for (String key : keys) {
             String f = key.toLowerCase().charAt(0) + "/";
             File letterIndex = new File(Configuration.INDEX_SAVE_DIRECTORY + f);
@@ -60,11 +58,13 @@ public class IndexWriter extends Thread {
             try {
                 String keyDir = key.length() > 30 ? key.substring(0, 30) : key;
                 writer = new FileWriter(new File(Configuration.INDEX_SAVE_DIRECTORY + f + keyDir.toLowerCase() + ".index"));
-                writer.write(MapReducer.finalMap.get(key));
-                writer.flush();
+                
+                for (Integer i : MapReducer.finalMap.get(key)) {
+                    writer.write(i + "\n");
+                }
+                
                 writer.close();
             } catch (IOException e) {}
         }
-        System.out.println("Writer complete.");
     }
 }

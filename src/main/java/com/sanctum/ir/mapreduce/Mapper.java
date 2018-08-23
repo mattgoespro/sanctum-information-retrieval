@@ -31,7 +31,7 @@ public class Mapper extends Thread {
 
     public volatile boolean done = false;
     private final Tweet[] tweets;
-    private final HashMap<String, String> pairs;
+    private final HashMap<String, ArrayList<Integer>> pairs;
 
     /**
      * Constructor
@@ -59,11 +59,13 @@ public class Mapper extends Thread {
             for (String k : words) {
                 String key = (String) k;
                 key = key.toLowerCase();
-
+                
                 if (pairs.containsKey(key)) {
-                    pairs.put(key, ThreadedDataLoader.inverseStore.get(t.getContainingFileName()) + "(" + pairs.get(key).substring(pairs.get(key).indexOf("(") + 1, pairs.get(key).indexOf(")")) + ", " + t.getTweetIndex() + ")");
+                    pairs.get(key).add(ThreadedDataLoader.inverseStore.get(t.getContainingFileName()));
                 } else {
-                    pairs.put(key, ThreadedDataLoader.inverseStore.get(t.getContainingFileName()) + "(" + t.getTweetIndex() + ")");
+                    ArrayList<Integer> values = new ArrayList();
+                    values.add(ThreadedDataLoader.inverseStore.get(t.getContainingFileName()));
+                    pairs.put(key, values);
                 }
             }
         }
