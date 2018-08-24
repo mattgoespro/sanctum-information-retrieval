@@ -23,6 +23,11 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Scanner;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.LineIterator;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 /**
  * Class that is used to filter and process tags.
@@ -47,18 +52,32 @@ public class TagFilter {
     /**
      * Loads the list of words from a file to exclude from indexing.
      *
-     * @param fileSystemRoot
+     * @param fs
      * @throws FileNotFoundException
      */
-    public void loadBlacklist(String fileSystemRoot) throws FileNotFoundException, IOException {
-        try (Scanner scFile = new Scanner(new File("indexing_token_blacklist.cfg"))) {
+    public void loadBlacklist(FileSystem fs) throws FileNotFoundException, IOException {
+        if (fs != null) {
+            FSDataInputStream filterStream = fs.open(new Path("/sanctum/indexing_token_blacklist.cfg"));
+            LineIterator lineIterator = IOUtils.lineIterator(filterStream, "UTF-8");
             String line;
 
-            while (scFile.hasNext()) {
-                line = scFile.nextLine();
+            while (lineIterator.hasNext()) {
+                line = lineIterator.nextLine();
 
                 if (!line.startsWith("#")) {
                     this.tagValueBlacklist.add(line);
+                }
+            }
+        } else {
+            try (Scanner scFile = new Scanner(new File("indexing_token_blacklist.cfg"))) {
+                String line;
+
+                while (scFile.hasNext()) {
+                    line = scFile.nextLine();
+
+                    if (!line.startsWith("#")) {
+                        this.tagValueBlacklist.add(line);
+                    }
                 }
             }
         }

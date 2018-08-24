@@ -18,9 +18,7 @@
 package com.sanctum.ir;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.net.URI;
 import java.util.Scanner;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
@@ -39,54 +37,63 @@ public class Configuration {
             KEY_INDEXING_INCLUDE_HASHTAGS = "Include hashtags",
             KEY_INDEXING_INCLUDE_MENTIONS = "Include mentions",
             KEY_INDEXING_INCLUDE_LINKS = "Include links",
-            KEY_INDEX_SAVE_DIRECTORY = "Inverted file save directory",
-            KEY_FILESYSTEM_ROOT = "Filesystem root";
+            KEY_INDEX_SAVE_DIRECTORY = "Inverted file save directory";
     public static String DATA_DIRECTORY,
             INDEXING_INCLUDE_HASHTAGS,
             INDEXING_INCLUDE_MENTIONS,
             INDEXING_INCLUDE_LINKS,
-            INDEX_SAVE_DIRECTORY,
-            FILESYSTEM_ROOT;
+            INDEX_SAVE_DIRECTORY;
 
     /**
      * Loads the configuration. Returns true if successful.
      *
-     * @param hdfsRoot
+     * @param fs
      * @return boolean
      * @throws java.io.IOException
      */
-    public static boolean loadConfiguration(String hdfsRoot) throws IOException {
-        Scanner scFile = new Scanner(new File("config.cfg"));
-        String line;
+    public static boolean loadConfiguration(FileSystem fs) throws IOException {
+        if (fs != null) {
+            FSDataInputStream cfgStream = fs.open(new Path("/sanctum/config.cfg"));
+            LineIterator lineIterator = IOUtils.lineIterator(cfgStream, "UTF-8");
+            String line;
 
-        while (scFile.hasNext()) {
-            line = scFile.nextLine();
+            while (lineIterator.hasNext()) {
+                line = lineIterator.nextLine();
+                setConfigValue(line);
+            }
             
-            if (line.startsWith("#") || line.startsWith(" ") || line.equals("") || line.startsWith("\n")) {
-                continue;
+            return true;
+        } else {
+            Scanner scFile = new Scanner(new File("config.cfg"));
+            String line;
+
+            while (scFile.hasNext()) {
+                line = scFile.nextLine();
+                setConfigValue(line);
             }
 
-            String value = line.replaceAll("\\s+", "");
-            value = value.substring(value.indexOf(":") + 1);
-
-            if (line.startsWith(com.sanctum.ir.Configuration.KEY_DATA_DIRECTORY)) {
-                com.sanctum.ir.Configuration.DATA_DIRECTORY = value;
-            } else if (line.startsWith(com.sanctum.ir.Configuration.KEY_INDEXING_INCLUDE_HASHTAGS)) {
-                com.sanctum.ir.Configuration.INDEXING_INCLUDE_HASHTAGS = value;
-            } else if (line.startsWith(com.sanctum.ir.Configuration.KEY_INDEXING_INCLUDE_MENTIONS)) {
-                com.sanctum.ir.Configuration.INDEXING_INCLUDE_MENTIONS = value;
-            } else if (line.startsWith(com.sanctum.ir.Configuration.KEY_INDEXING_INCLUDE_LINKS)) {
-                com.sanctum.ir.Configuration.INDEXING_INCLUDE_LINKS = value;
-            } else if (line.startsWith(com.sanctum.ir.Configuration.KEY_INDEX_SAVE_DIRECTORY)) {
-                com.sanctum.ir.Configuration.INDEX_SAVE_DIRECTORY = value;
-            } else if (line.startsWith(com.sanctum.ir.Configuration.KEY_FILESYSTEM_ROOT)) {
-                com.sanctum.ir.Configuration.FILESYSTEM_ROOT = value;
-            } else {
-                return false;
-            }
+            return true;
         }
+    }
 
-        return true;
+    private static void setConfigValue(String line) {
+        if (line.startsWith("#") || line.startsWith(" ") || line.equals("") || line.startsWith("\n")) {
+            return;
+        }
+        
+        String value = line.replaceAll("\\s+", "");
+        value = value.substring(value.indexOf(":") + 1);
 
+        if (line.startsWith(com.sanctum.ir.Configuration.KEY_DATA_DIRECTORY)) {
+            com.sanctum.ir.Configuration.DATA_DIRECTORY = value;
+        } else if (line.startsWith(com.sanctum.ir.Configuration.KEY_INDEXING_INCLUDE_HASHTAGS)) {
+            com.sanctum.ir.Configuration.INDEXING_INCLUDE_HASHTAGS = value;
+        } else if (line.startsWith(com.sanctum.ir.Configuration.KEY_INDEXING_INCLUDE_MENTIONS)) {
+            com.sanctum.ir.Configuration.INDEXING_INCLUDE_MENTIONS = value;
+        } else if (line.startsWith(com.sanctum.ir.Configuration.KEY_INDEXING_INCLUDE_LINKS)) {
+            com.sanctum.ir.Configuration.INDEXING_INCLUDE_LINKS = value;
+        } else if (line.startsWith(com.sanctum.ir.Configuration.KEY_INDEX_SAVE_DIRECTORY)) {
+            com.sanctum.ir.Configuration.INDEX_SAVE_DIRECTORY = value;
+        }
     }
 }

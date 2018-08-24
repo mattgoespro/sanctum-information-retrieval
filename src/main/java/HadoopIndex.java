@@ -1,13 +1,26 @@
 /*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
+ * Copyright (C) 2018 Matt
+ *
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 import com.sanctum.ir.TagFilter;
 import java.io.IOException;
+import java.net.URI;
 import java.util.ArrayList;
-
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -16,8 +29,9 @@ import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
 
-public class HadoopMain {
+public class HadoopIndex {
 
     public static class TokenizerMapper extends Mapper<Object, Text, Text, Text> {
 
@@ -55,7 +69,7 @@ public class HadoopMain {
                 }
             }
 
-            HadoopMain.filter.filterText(words);
+            HadoopIndex.filter.filterText(words);
 
             for (String w : words) {
                 word.set(w);
@@ -66,40 +80,53 @@ public class HadoopMain {
 
     public static class PathReducer extends Reducer<Text, Text, Text, Text> {
 
+        private MultipleOutputs mos;
         private final Text result = new Text();
+
+        @Override
+        public void setup(Context context) {
+            mos = new MultipleOutputs(context);
+        }
 
         @Override
         public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
             String path = "";
 
             for (Text val : values) {
-                if(!val.equals("") && !path.contains(val.toString())) {
+                if (!val.toString().equals("") && !path.contains(val.toString())) {
                     path += val.toString() + "; ";
                 }
             }
 
             result.set(path);
-            context.write(key, result);
+            String keyDir = key.toString().length() > 30 ? key.toString().substring(0, 30) : key.toString();
+            mos.write(key, result, "/sanctum/index/" + key.toString().charAt(0) + "/" + keyDir + ".index");
         }
     }
-    
+
     public static TagFilter filter = new TagFilter();
-    
+
     public static void main(String[] args) throws Exception {
-        boolean irConfig = com.sanctum.ir.Configuration.loadConfiguration("hdfs://ip-172-31-4-196.us-east-2.compute.internal:8020");
-        
+        Configuration conf = new Configuration();
+        conf.addResource(new Path("file:///etc/hadoop/conf/core-site.xml"));
+        conf.addResource(new Path("file:///etc/hadoop/conf/hdfs-site.xml"));
+        FileSystem fs = FileSystem.get(URI.create(conf.get("fs.defaultFS")), conf);
+
+        boolean irConfig = com.sanctum.ir.Configuration.loadConfiguration(fs);
+
         if (irConfig) {
-            filter.loadBlacklist("hdfs://ip-172-31-4-196.us-east-2.compute.internal:8020");
-            Configuration conf = new Configuration();
+            filter.loadBlacklist(fs);
+
             Job job = Job.getInstance(conf, "word paths");
-            job.setJarByClass(HadoopMain.class);
+            job.setJarByClass(HadoopIndex.class);
             job.setMapperClass(TokenizerMapper.class);
             job.setCombinerClass(PathReducer.class);
             job.setReducerClass(PathReducer.class);
             job.setOutputKeyClass(Text.class);
             job.setOutputValueClass(Text.class);
-            FileInputFormat.addInputPath(job, new Path("/sanctum/data"));
-            FileOutputFormat.setOutputPath(job, new Path("/sanctum/output"));
+            FileInputFormat.addInputPath(job, new Path("/sanctum/tweet_documents"));
+            FileOutputFormat.setOutputPath(job, new Path("/sanctum/index"));
+            fs.close();
             System.exit(job.waitForCompletion(true) ? 0 : 1);
         } else {
             System.out.println("Unable to load config file.");
