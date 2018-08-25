@@ -37,7 +37,7 @@ import java.util.logging.Logger;
  */
 class DocumentComparator implements Comparator {
 
-    private String[] queryTerms;
+    private final String[] queryTerms;
 
     /**
      * Constructor
@@ -83,7 +83,7 @@ class DocumentComparator implements Comparator {
      */
     private double getTfIdf(String doc, String term) {
         try {
-            File f = new File(ThreadedDataLoader.filePathStore.get(Integer.parseInt(doc)));
+            File f = new File(ThreadedDataLoader.pathStore.get(Integer.parseInt(doc)));
             Scanner scFile = new Scanner(f);
             Tweet t = new Tweet("", 0, scFile.nextLine());
             t.filter();
@@ -133,7 +133,7 @@ public class SearchIndex {
             if (termArr.length > 1) {
                 for (String document : documents) {
                     Collection<String> result = new TreeSet<>();
-                    String doc = ThreadedDataLoader.filePathStore.get(Integer.parseInt(document));
+                    String doc = ThreadedDataLoader.pathStore.get(Integer.parseInt(document));
 
                     try (Scanner tweetDocScanner = new Scanner(new File(doc))) {
                         result.add(tweetDocScanner.nextLine());
@@ -151,7 +151,7 @@ public class SearchIndex {
                 Collection<String> result = new TreeSet<>();
 
                 for (String document : documents) {
-                    String doc = ThreadedDataLoader.filePathStore.get(Integer.parseInt(document));
+                    String doc = ThreadedDataLoader.pathStore.get(Integer.parseInt(document));
 
                     try (Scanner tweetDocScanner = new Scanner(new File(doc))) {
                         result.add(tweetDocScanner.nextLine());

@@ -92,15 +92,15 @@ public class ThreadedDataLoader extends DataLoader {
         
         System.out.print("Writing data paths...");
         File dataPaths = new File("data_path_store.data");
-        ArrayList<String> tweetDocPaths = new ArrayList();
-        getSourceFiles(f, tweetDocPaths);
-        ThreadedDataLoader.COLLECTION_SIZE = tweetDocPaths.size();
+        
         if (!dataPaths.exists()) {
             System.out.println("done.");
-            writeFilePathStore(tweetDocPaths);
+            pathStore.write();
         } else {
             System.out.println("using existing data paths file.");
         }
+        
+        ThreadedDataLoader.COLLECTION_SIZE = pathStore.getSize();
         
         System.out.println("Loading successful (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec)");
     }

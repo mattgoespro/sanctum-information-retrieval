@@ -17,9 +17,6 @@
  */
 package com.sanctum.ir;
 
-import static com.sanctum.ir.DataLoader.filePathID;
-import static com.sanctum.ir.DataLoader.filePathStore;
-import static com.sanctum.ir.DataLoader.inverseStore;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileReader;
@@ -88,12 +85,7 @@ public class PartialTweetLoader extends TweetLoader {
         
         try (FileWriter docWriter = new FileWriter(f)) {
             docWriter.write(line);
-            filePathStore.put(filePathID, f.getAbsolutePath());
-            inverseStore.put(f.getAbsolutePath(), filePathID);
-            
-            synchronized(this) {
-                filePathID++;
-            }
+            ThreadedDataLoader.pathStore.put(f.getAbsolutePath());
         }
         return f.getAbsolutePath();
     }

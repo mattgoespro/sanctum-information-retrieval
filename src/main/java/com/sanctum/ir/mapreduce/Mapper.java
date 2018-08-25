@@ -61,10 +61,10 @@ public class Mapper extends Thread {
                 key = key.toLowerCase();
                 
                 if (pairs.containsKey(key)) {
-                    pairs.get(key).add(ThreadedDataLoader.inverseStore.get(t.getContainingFileName()));
+                    pairs.get(key).add(ThreadedDataLoader.pathStore.getKey(t.getContainingFileName()));
                 } else {
                     ArrayList<Integer> values = new ArrayList();
-                    values.add(ThreadedDataLoader.inverseStore.get(t.getContainingFileName()));
+                    values.add(ThreadedDataLoader.pathStore.getKey(t.getContainingFileName()));
                     pairs.put(key, values);
                 }
             }
