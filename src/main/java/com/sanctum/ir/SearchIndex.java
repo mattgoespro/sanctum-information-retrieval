@@ -17,6 +17,7 @@
  */
 package com.sanctum.ir;
 
+import com.sanctum.drivers.DocumentComparator;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -50,7 +51,7 @@ public class SearchIndex {
     public static Collection<String> search(FileSystem fs, String[] termArr) throws IOException {
         ArrayList<Collection<String>> results = new ArrayList();
         ArrayList<String> documents = documents(fs, termArr);
-        rankDocuments(documents, termArr);
+        rankDocuments(fs, documents, termArr);
 
         if (!documents.isEmpty()) {
             System.out.println(documents.size() + " documents found.");
@@ -142,9 +143,9 @@ public class SearchIndex {
      * @param finalMap
      * @param key
      */
-    private static void rankDocuments(ArrayList<String> documents, String[] query) {
+    private static void rankDocuments(FileSystem fs, ArrayList<String> documents, String[] query) {
         String[] docs = new String[documents.size()];
         documents.toArray(docs);
-        Arrays.sort(docs, new DocumentComparator(query));
+        Arrays.sort(docs, new DocumentComparator(fs, query));
     }
 }
