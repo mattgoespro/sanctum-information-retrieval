@@ -23,87 +23,14 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.HashMap;
 import java.util.Scanner;
 import java.util.TreeSet;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-
-/**
- * Class used to sort documents using tf-idf weightings.
- *
- * @author Matt
- */
-class DocumentComparator implements Comparator {
-
-    private final String[] queryTerms;
-
-    /**
-     * Constructor
-     *
-     * @param queryTerms
-     */
-    public DocumentComparator(String[] queryTerms) {
-        this.queryTerms = queryTerms;
-    }
-
-    @Override
-    public int compare(Object o1, Object o2) {
-        if (o1 instanceof String && o2 instanceof String) {
-            String doc1 = (String) o1, doc2 = (String) o2;
-            
-            double score1 = 0, score2 = 0;
-            
-            for (String term : queryTerms) {
-                score1 += getTfIdf(doc1, term);
-                score2 += getTfIdf(doc2, term);
-            }
-            
-            if(score1 == score2) {
-                System.out.println("docs equal");
-                return 0;
-            } else if (score1 > score2) {
-                System.out.println("doc1 more");
-                return 1;
-            } else {
-                System.out.println("doc2 more");
-                return -1;
-            }
-        }
-        
-        return -1;
-    }
-    
-    /**
-     * Returns the tf-idf score for a term in a document.
-     * @param doc
-     * @param term
-     * @return double
-     */
-    private double getTfIdf(String doc, String term) {
-        try {
-            File f = new File(ThreadedDataLoader.pathStore.get(Integer.parseInt(doc)));
-            Scanner scFile = new Scanner(f);
-            Tweet t = new Tweet("", 0, scFile.nextLine());
-            t.filter();
-            
-            int tf = 0;
-            
-            for (String word : t.getWords()) {
-                if (word.equalsIgnoreCase(term)) {
-                    tf++;
-                }
-            }
-            
-            double idf = Math.log(((double) ThreadedDataLoader.COLLECTION_SIZE) / (double)tf);
-            return tf * idf;
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(DocumentComparator.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        return 0;
-    }
-}
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 /**
  * Class used to retrieve Tweets from the index.
@@ -112,19 +39,17 @@ class DocumentComparator implements Comparator {
  */
 public class SearchIndex {
 
-    public static HashMap<Integer, Tweet> tweetHash = new HashMap();
-
     /**
      * Returns all Tweets containing a specific term.
      *
-     * @param terms
+     * @param fs
+     * @param termArr
      * @return ArrayList
      * @throws java.io.IOException
      */
-    public static Collection<String> search(String terms) throws IOException {
+    public static Collection<String> search(FileSystem fs, String[] termArr) throws IOException {
         ArrayList<Collection<String>> results = new ArrayList();
-        String[] termArr = terms.split(" ");
-        ArrayList<String> documents = documents(termArr);
+        ArrayList<String> documents = documents(fs, termArr);
         rankDocuments(documents, termArr);
 
         if (!documents.isEmpty()) {
@@ -169,15 +94,32 @@ public class SearchIndex {
      * @param terms
      * @return String
      */
-    private static ArrayList<String> documents(String[] termsArr) {
+    private static ArrayList<String> documents(FileSystem fs, String[] termsArr) {
         ArrayList<String> docs = new ArrayList();
 
         for (String term : termsArr) {
             System.out.println("Checking " + Configuration.INDEX_SAVE_DIRECTORY + term.charAt(0) + "/" + term + ".index");
-            File ind = new File(Configuration.INDEX_SAVE_DIRECTORY + term.charAt(0) + "/" + term + ".index");
 
-            try {
-                try (Scanner sc = new Scanner(ind)) {
+            if (fs == null) {
+                File ind = new File(Configuration.INDEX_SAVE_DIRECTORY + term.charAt(0) + "/" + term + ".index");
+
+                try {
+                    try (Scanner sc = new Scanner(ind)) {
+                        while (sc.hasNextLine()) {
+                            String line = sc.nextLine();
+
+                            if (!line.equals("")) {
+                                docs.add(line);
+                            }
+                        }
+                    }
+                } catch (FileNotFoundException ex) {
+                }
+            } else {
+                try {
+                    FSDataInputStream indexStream = fs.open(new Path("/sanctum/index/" + term.charAt(0) + "/" + term + ".index"));
+                    Scanner sc = new Scanner(indexStream);
+
                     while (sc.hasNextLine()) {
                         String line = sc.nextLine();
 
@@ -185,8 +127,9 @@ public class SearchIndex {
                             docs.add(line);
                         }
                     }
+                } catch (IOException ex) {
+                    Logger.getLogger(SearchIndex.class.getName()).log(Level.SEVERE, null, ex);
                 }
-            } catch (FileNotFoundException ex) {
             }
         }
 

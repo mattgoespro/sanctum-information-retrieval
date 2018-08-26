@@ -15,8 +15,11 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
+import com.sanctum.ir.DataPathStore;
 import java.io.IOException;
+import java.net.URI;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -43,7 +46,7 @@ public class HadoopDocSplit {
         @Override
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
             tweet.set(value.toString());
-            context.write(value, new Text());
+            context.write(tweet, new Text());
         }
     }
 
@@ -60,12 +63,18 @@ public class HadoopDocSplit {
         @Override
         public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
             result.set(key.toString());
-            mos.write(key, new Text(), "tweet");
+            pathStore.put("tweet_" + key.toString().hashCode());
+            mos.write(result, new Text(), "tweet_" + key.toString().hashCode());
         }
     }
-
+    
+    public static DataPathStore pathStore = new DataPathStore();
+    
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
+        conf.addResource(new Path("file:///etc/hadoop/conf/core-site.xml"));
+        conf.addResource(new Path("file:///etc/hadoop/conf/hdfs-site.xml"));
+        FileSystem fs = FileSystem.get(URI.create(conf.get("fs.defaultFS")), conf);
         Job job = Job.getInstance(conf, "doc split");
         job.setJarByClass(HadoopDocSplit.class);
         job.setMapperClass(DocSplitMapper.class);
@@ -75,7 +84,9 @@ public class HadoopDocSplit {
         job.setOutputValueClass(Text.class);
         FileInputFormat.addInputPath(job, new Path("/sanctum/data"));
         FileOutputFormat.setOutputPath(job, new Path("/sanctum/tweet_documents"));
-        System.exit(job.waitForCompletion(true) ? 0 : 1);
-
+        
+        if(job.waitForCompletion(true)) {
+            pathStore.write(fs);
+        }
     }
 }

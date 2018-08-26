@@ -6,16 +6,21 @@
 package com.sanctum.ir;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import org.apache.commons.io.IOUtils;
+import org.apache.commons.io.LineIterator;
+import org.apache.hadoop.fs.FSDataInputStream;
+import org.apache.hadoop.fs.FSDataOutputStream;
+import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.Path;
 
 /**
  * Class to store the data file paths.
@@ -49,18 +54,20 @@ public class DataPathStore {
             ++this.filePathID;
         }
     }
-    
+
     /**
      * Returns the path for a given Integer key.
+     *
      * @param key
      * @return String
      */
     public String get(Integer key) {
         return this.filePathStore.get(key);
     }
-    
+
     /**
      * Returns an Integer key for a specific path value.
+     *
      * @param value
      * @return Integer
      */
@@ -70,36 +77,65 @@ public class DataPathStore {
 
     /**
      * Writes the file path store to a file.
+     *
+     * @param fs
      */
-    public void write() {
-        try (PrintWriter writer = new PrintWriter(new FileWriter(new File("data_path_store.data")))) {
-            for (String path : inverseStore.keySet()) {
-                // write Integer-String key
-                writer.println(inverseStore.get(path) + " " + path);
-                writer.flush();
+    public void write(FileSystem fs) {
+        if (fs == null) {
+            try (PrintWriter writer = new PrintWriter(new FileWriter(new File("data_path_store.data")))) {
+                for (String path : inverseStore.keySet()) {
+                    // write Integer-String key
+                    writer.println(inverseStore.get(path) + " " + path);
+                    writer.flush();
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(ThreadedDataLoader.class.getName()).log(Level.SEVERE, null, ex);
             }
-            writer.close();
-
-        } catch (IOException ex) {
-            Logger.getLogger(ThreadedDataLoader.class.getName()).log(Level.SEVERE, null, ex);
+        } else {
+            try {
+                try (FSDataOutputStream writer = fs.create(new Path("/sanctum/data_path_store.data"))) {
+                    for (String path : inverseStore.keySet()) {
+                        // write Integer-String key
+                        writer.writeBytes(inverseStore.get(path) + " " + path);
+                        writer.flush();
+                    }
+                }
+            } catch (IOException ex) {
+                Logger.getLogger(DataPathStore.class.getName()).log(Level.SEVERE, null, ex);
+            }
         }
     }
 
     /**
      * Loads the store containing the file path values.
      *
+     * @param fs
      * @throws java.io.IOException
      */
-    public void load() throws IOException {
-        BufferedReader reader = new BufferedReader(new FileReader("data_path_store.data"));
-        String line = reader.readLine();
+    public void load(FileSystem fs) throws IOException {
+        if (fs == null) {
+            BufferedReader reader = new BufferedReader(new FileReader("data_path_store.data"));
+            String line = reader.readLine();
 
-        while (line != null) {
-            int id = Integer.parseInt(line.substring(0, line.indexOf(" ")));
-            String path = line.substring(line.indexOf(" ") + 1);
-            this.filePathStore.put(id, path);
-            this.inverseStore.put(path, id);
-            line = reader.readLine();
+            while (line != null) {
+                int id = Integer.parseInt(line.substring(0, line.indexOf(" ")));
+                String path = line.substring(line.indexOf(" ") + 1);
+                this.filePathStore.put(id, path);
+                this.inverseStore.put(path, id);
+                line = reader.readLine();
+            }
+        } else {
+            FSDataInputStream store = fs.open(new Path("/sanctum/data_path_store.data"));
+            LineIterator lineIterator = IOUtils.lineIterator(store, "UTF-8");
+            String line;
+            
+            while(lineIterator.hasNext()) {
+                line = lineIterator.nextLine();
+                int id = Integer.parseInt(line.substring(0, line.indexOf(" ")));
+                String path = line.substring(line.indexOf(" ") + 1);
+                this.filePathStore.put(id, path);
+                this.inverseStore.put(path, id);
+            }
         }
     }
 

@@ -41,7 +41,7 @@ public class DataLoader {
         DataLoader.pathStore = new DataPathStore();
         
         try {
-            pathStore.load();
+            pathStore.load(null);
         } catch (IOException ex) {
             System.out.println("Unable to load file path store.");
         }
@@ -72,7 +72,7 @@ public class DataLoader {
         File dataPaths = new File("data_path_store.data");
 
         if (!dataPaths.exists()) {
-            pathStore.write();
+            pathStore.write(null);
             System.out.println("done.");
         }else {
             System.out.println("using existing data paths.");

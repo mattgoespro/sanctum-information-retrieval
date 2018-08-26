@@ -95,7 +95,7 @@ public class ThreadedDataLoader extends DataLoader {
         
         if (!dataPaths.exists()) {
             System.out.println("done.");
-            pathStore.write();
+            pathStore.write(null);
         } else {
             System.out.println("using existing data paths file.");
         }
