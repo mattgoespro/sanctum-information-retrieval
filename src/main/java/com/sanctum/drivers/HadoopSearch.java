@@ -21,6 +21,7 @@ public class HadoopSearch {
     /**
      * Command-line search for a sequence of terms.
      * @param args 
+     * @throws java.io.IOException 
      */
     public static void main(String[] args) throws IOException {
         Configuration conf = new Configuration();

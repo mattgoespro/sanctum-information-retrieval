@@ -28,6 +28,7 @@ public class DocumentComparator implements Comparator {
     /**
      * Constructor
      *
+     * @param fs
      * @param queryTerms
      */
     public DocumentComparator(FileSystem fs, String[] queryTerms) {
@@ -72,7 +73,7 @@ public class DocumentComparator implements Comparator {
     private double getTfIdf(String doc, String term) {
         if (fs == null) {
             try {
-                File f = new File(ThreadedDataLoader.pathStore.get(Integer.parseInt(doc)));
+                File f = new File(ThreadedDataLoader.pathStore.get(doc));
                 Scanner scFile = new Scanner(f);
                 Tweet t = new Tweet("", 0, scFile.nextLine());
                 scFile.close();
@@ -93,7 +94,7 @@ public class DocumentComparator implements Comparator {
             }
         } else {
             try {
-                FSDataInputStream docStream = fs.open(new Path(HadoopSearch.pathStore.get(Integer.parseInt(doc))));
+                FSDataInputStream docStream = fs.open(new Path(HadoopSearch.pathStore.get(doc)));
                 LineIterator lineIterator = IOUtils.lineIterator(docStream, "UTF-8");
                 Tweet t = new Tweet("", 0, lineIterator.nextLine());
                 lineIterator.close();

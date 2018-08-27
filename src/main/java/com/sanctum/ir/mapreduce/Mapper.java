@@ -31,7 +31,7 @@ public class Mapper extends Thread {
 
     public volatile boolean done = false;
     private final Tweet[] tweets;
-    private final HashMap<String, ArrayList<Integer>> pairs;
+    private final HashMap<String, ArrayList<String>> pairs;
 
     /**
      * Constructor
@@ -63,7 +63,7 @@ public class Mapper extends Thread {
                 if (pairs.containsKey(key)) {
                     pairs.get(key).add(ThreadedDataLoader.pathStore.getKey(t.getContainingFileName()));
                 } else {
-                    ArrayList<Integer> values = new ArrayList();
+                    ArrayList<String> values = new ArrayList();
                     values.add(ThreadedDataLoader.pathStore.getKey(t.getContainingFileName()));
                     pairs.put(key, values);
                 }

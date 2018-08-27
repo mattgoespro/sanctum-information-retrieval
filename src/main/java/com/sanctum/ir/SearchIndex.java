@@ -59,7 +59,7 @@ public class SearchIndex {
             if (termArr.length > 1) {
                 for (String document : documents) {
                     Collection<String> result = new TreeSet<>();
-                    String doc = ThreadedDataLoader.pathStore.get(Integer.parseInt(document));
+                    String doc = ThreadedDataLoader.pathStore.get(document);
 
                     try (Scanner tweetDocScanner = new Scanner(new File(doc))) {
                         result.add(tweetDocScanner.nextLine());
@@ -77,7 +77,7 @@ public class SearchIndex {
                 Collection<String> result = new TreeSet<>();
 
                 for (String document : documents) {
-                    String doc = ThreadedDataLoader.pathStore.get(Integer.parseInt(document));
+                    String doc = ThreadedDataLoader.pathStore.get(document);
 
                     try (Scanner tweetDocScanner = new Scanner(new File(doc))) {
                         result.add(tweetDocScanner.nextLine());

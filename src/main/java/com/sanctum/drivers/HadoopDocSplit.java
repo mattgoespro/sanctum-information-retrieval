@@ -18,8 +18,14 @@ package com.sanctum.drivers;
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
 import com.sanctum.ir.DataPathStore;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
+import java.io.Serializable;
 import java.net.URI;
+import java.util.Base64;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
@@ -49,6 +55,7 @@ public class HadoopDocSplit {
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
             tweet.set(value.toString());
             context.write(tweet, new Text());
+            context.write(new Text("data_path_store"), new Text("tweet_" + value.toString().hashCode()));
         }
     }
 
@@ -64,19 +71,19 @@ public class HadoopDocSplit {
 
         @Override
         public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-            result.set(key.toString());
-            pathStore.put("tweet_" + key.toString().hashCode());
-            mos.write(result, new Text(), "tweet_" + key.toString().hashCode());
+            if (key.toString().equalsIgnoreCase("data_path_store")) {
+                context.write(new Text(key.toString().hashCode() + ""), new Text("tweet_" + key.toString().hashCode()));
+            } else {
+                result.set(key.toString());
+                mos.write(result, new Text(), "tweet_" + key.toString().hashCode());
+            }
         }
     }
-    
+
     public static DataPathStore pathStore = new DataPathStore();
-    
+
     public static void main(String[] args) throws Exception {
         Configuration conf = new Configuration();
-        conf.addResource(new Path("file:///etc/hadoop/conf/core-site.xml"));
-        conf.addResource(new Path("file:///etc/hadoop/conf/hdfs-site.xml"));
-        FileSystem fs = FileSystem.get(URI.create(conf.get("fs.defaultFS")), conf);
         Job job = Job.getInstance(conf, "doc split");
         job.setJarByClass(HadoopDocSplit.class);
         job.setMapperClass(DocSplitMapper.class);
@@ -86,9 +93,30 @@ public class HadoopDocSplit {
         job.setOutputValueClass(Text.class);
         FileInputFormat.addInputPath(job, new Path("/sanctum/data"));
         FileOutputFormat.setOutputPath(job, new Path("/sanctum/tweet_documents"));
-        
-        if(job.waitForCompletion(true)) {
-            pathStore.write(fs);
-        }
+        job.waitForCompletion(true);
+    }
+
+    /**
+     * Read the object from Base64 string.
+     */
+    private static Object fromString(String s) throws IOException,
+            ClassNotFoundException {
+        byte[] data = Base64.getDecoder().decode(s);
+        ObjectInputStream ois = new ObjectInputStream(
+                new ByteArrayInputStream(data));
+        Object o = ois.readObject();
+        ois.close();
+        return o;
+    }
+
+    /**
+     * Write the object to a Base64 string.
+     */
+    private static String toString(Serializable o) throws IOException {
+        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(baos);
+        oos.writeObject(o);
+        oos.close();
+        return Base64.getEncoder().encodeToString(baos.toByteArray());
     }
 }
