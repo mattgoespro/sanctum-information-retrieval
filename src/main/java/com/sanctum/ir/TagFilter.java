@@ -57,7 +57,7 @@ public class TagFilter {
      */
     public void loadBlacklist(FileSystem fs) throws FileNotFoundException, IOException {
         if (fs != null) {
-            FSDataInputStream filterStream = fs.open(new Path("/sanctum/indexing_token_blacklist.cfg"));
+            FSDataInputStream filterStream = fs.open(new Path("sanctum/indexing_token_blacklist.cfg"));
             LineIterator lineIterator = IOUtils.lineIterator(filterStream, "UTF-8");
             String line;
 

@@ -6,31 +6,31 @@
 package com.sanctum.ir;
 
 import java.io.BufferedReader;
-import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.ObjectOutputStream;
 import java.io.PrintWriter;
 import java.io.Serializable;
-import java.util.Base64;
 import java.util.HashMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;
 import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
+import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
+import org.apache.hadoop.fs.RemoteIterator;
 
 /**
  * Class to store the data file paths.
  *
  * @author Matt
  */
-public class DataPathStore {
+public class DataPathStore implements Serializable {
+    
+    public static long serialVersionUID = 4;
     
     public final HashMap<String, String> filePathStore;
     private final HashMap<String, String> inverseStore;
@@ -79,29 +79,14 @@ public class DataPathStore {
      * @param fs
      */
     public void write(FileSystem fs) {
-        if (fs == null) {
-            try (PrintWriter writer = new PrintWriter(new FileWriter(new File("data_path_store.data")))) {
-                for (String path : inverseStore.keySet()) {
-                    // write Integer-String key
-                    writer.println(inverseStore.get(path) + " " + path);
-                    writer.flush();
-                }
-            } catch (IOException ex) {
-                Logger.getLogger(ThreadedDataLoader.class.getName()).log(Level.SEVERE, null, ex);
+        try (PrintWriter writer = new PrintWriter(new FileWriter(new File("data_path_store.data")))) {
+            for (String path : inverseStore.keySet()) {
+                // write Integer-String key
+                writer.println(inverseStore.get(path) + " " + path);
+                writer.flush();
             }
-        } else {
-            try {
-                FSDataOutputStream writer = fs.create(new Path("/sanctum/data_path_store.data"));
-                System.out.println(inverseStore.size() + ": " + inverseStore.keySet());
-                for (String path : inverseStore.keySet()) {
-                    System.out.println("Writing " + path);
-                    // write Integer-String key
-                    writer.writeBytes(inverseStore.get(path) + " " + path + "\n");
-                }
-                writer.close();
-            } catch (IOException ex) {
-                Logger.getLogger(DataPathStore.class.getName()).log(Level.SEVERE, null, ex);
-            }
+        } catch (IOException ex) {
+            Logger.getLogger(ThreadedDataLoader.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -124,16 +109,27 @@ public class DataPathStore {
                 line = reader.readLine();
             }
         } else {
-            FSDataInputStream store = fs.open(new Path("/sanctum/data_path_store.data"));
-            LineIterator lineIterator = IOUtils.lineIterator(store, "UTF-8");
-            String line;
+            RemoteIterator<LocatedFileStatus> files = fs.listFiles(new Path("sanctum/tweet_documents"), true);
+            
+            while (files.hasNext()) {
+                LocatedFileStatus lfs = files.next();
+                
+                if (lfs.getPath().getName().contains("data_paths_store")) {
+                    FSDataInputStream store = fs.open(lfs.getPath());
+                    LineIterator lineIterator = IOUtils.lineIterator(store, "UTF-8");
+                    String line;
 
-            while (lineIterator.hasNext()) {
-                line = lineIterator.nextLine();
-                String id = line.substring(0, line.indexOf(" "));
-                String path = line.substring(line.indexOf(" ") + 1);
-                this.filePathStore.put(id, path);
-                this.inverseStore.put(path, id);
+                    while (lineIterator.hasNext()) {
+                        line = lineIterator.nextLine();
+                        String[] idPath = line.split("\t");
+                        String id = idPath[0];
+                        String path = idPath[1];
+                        this.filePathStore.put(id, path);
+                        this.inverseStore.put(path, id);
+                    }
+                    lineIterator.close();
+                    store.close();
+                }
             }
         }
     }
@@ -146,5 +142,5 @@ public class DataPathStore {
     public int getSize() {
         return this.filePathStore.size();
     }
-    
+
 }

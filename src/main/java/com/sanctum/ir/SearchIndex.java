@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashMap;
 import java.util.Scanner;
 import java.util.TreeSet;
 import java.util.logging.Level;
@@ -118,7 +117,7 @@ public class SearchIndex {
                 }
             } else {
                 try {
-                    FSDataInputStream indexStream = fs.open(new Path("/sanctum/index/" + term.charAt(0) + "/" + term + ".index"));
+                    FSDataInputStream indexStream = fs.open(new Path("sanctum/index/" + term.charAt(0) + "/" + term + ".index"));
                     Scanner sc = new Scanner(indexStream);
 
                     while (sc.hasNextLine()) {

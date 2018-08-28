@@ -54,7 +54,7 @@ public class Configuration {
      */
     public static boolean loadConfiguration(FileSystem fs) throws IOException {
         if (fs != null) {
-            FSDataInputStream cfgStream = fs.open(new Path("/sanctum/config.cfg"));
+            FSDataInputStream cfgStream = fs.open(new Path("sanctum/config.cfg"));
             LineIterator lineIterator = IOUtils.lineIterator(cfgStream, "UTF-8");
             String line;
 
