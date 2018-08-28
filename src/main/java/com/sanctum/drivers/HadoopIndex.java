@@ -1,5 +1,3 @@
-package com.sanctum.drivers;
-
 /*
  * Copyright (C) 2018 Matt
  *
@@ -17,6 +15,8 @@ package com.sanctum.drivers;
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
+package com.sanctum.drivers;
+
 import com.sanctum.ir.DataPathStore;
 import com.sanctum.ir.TagFilter;
 import java.io.ByteArrayInputStream;
@@ -33,17 +33,13 @@ import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
-import org.apache.hadoop.mapred.TextOutputFormat;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
-import org.apache.hadoop.mapreduce.lib.input.FileSplit;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
-import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 
 public class HadoopIndex {
 
@@ -66,8 +62,7 @@ public class HadoopIndex {
                 String[] raw = value.toString().split(" ");
                 ArrayList<String> words = new ArrayList();
                 DataPathStore store = (DataPathStore) fromString(context.getConfiguration().get("pathstore"));
-                System.out.println("Trying to get " + value.toString().hashCode() + ": " + store.filePathStore);
-                String dir = store.get(value.toString().hashCode() + "");
+                String dir = store.getKey("sanctum/index/tweet_" + value.toString().hashCode() + "-m-00000");
                 DIRECTORY.set(dir);
 
                 for (String w : raw) {
@@ -76,7 +71,6 @@ public class HadoopIndex {
                         String[] process = w.split(" ");
 
                         for (String s : process) {
-                            System.out.println(s);
                             if (!s.equals("")) {
                                 words.add(s);
                             }

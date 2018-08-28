@@ -1,16 +1,3 @@
-package com.sanctum.drivers;
-
-
-import com.sanctum.ir.Configuration;
-import com.sanctum.ir.SearchIndex;
-import com.sanctum.ir.ThreadedDataLoader;
-import com.sanctum.ir.mapreduce.MapReducer;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-
 /*
  * Copyright (C) 2018 Matt
  *
@@ -28,10 +15,17 @@ import java.util.logging.Logger;
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
-/**
- *
- * @author Matt
- */
+package com.sanctum.drivers;
+
+import com.sanctum.ir.Configuration;
+import com.sanctum.ir.SearchIndex;
+import com.sanctum.ir.ThreadedDataLoader;
+import com.sanctum.ir.mapreduce.MapReducer;
+import java.io.IOException;
+import java.util.Collection;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+
 public class SanctumIR extends javax.swing.JFrame {
 
     private boolean config;

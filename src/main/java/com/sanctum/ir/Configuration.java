@@ -19,7 +19,6 @@ package com.sanctum.ir;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.file.FileSystems;
 import java.util.Scanner;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.io.LineIterator;

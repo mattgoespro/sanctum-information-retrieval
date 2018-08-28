@@ -1,5 +1,3 @@
-package com.sanctum.drivers;
-
 /*
  * Copyright (C) 2018 Matt
  *
@@ -17,14 +15,10 @@ package com.sanctum.drivers;
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  */
+package com.sanctum.drivers;
+
 import com.sanctum.ir.DataPathStore;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
-import java.util.Base64;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -53,7 +47,7 @@ public class HadoopDocSplit {
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
             tweet.set(value.toString());
             context.write(tweet, new Text());
-            context.write(new Text("data_paths_store"), new Text("tweet_" + value.toString().hashCode()));
+            context.write(new Text("data_paths_store"), new Text(value.toString().hashCode() + ""));
         }
     }
 
@@ -71,7 +65,7 @@ public class HadoopDocSplit {
         public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
             if (key.toString().equalsIgnoreCase("data_paths_store")) {
                 for (Text val : values) {
-                    mos.write(new Text(val.toString().hashCode() + ""), new Text("tweet_" + val.toString().hashCode()), "data_paths_store");
+                    mos.write(new Text(val.toString()), new Text("sanctum/index/tweet_" + val.toString() + "-m-00000"), "data_paths_store");
                 }
             } else {
                 result.set(key.toString());

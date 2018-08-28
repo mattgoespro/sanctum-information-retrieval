@@ -18,17 +18,17 @@
 package com.sanctum.ir;
 
 import com.sanctum.drivers.DocumentComparator;
+import com.sanctum.drivers.HadoopSearch;
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Scanner;
 import java.util.TreeSet;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import org.apache.hadoop.fs.FSDataInputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
@@ -48,22 +48,24 @@ public class SearchIndex {
      * @throws java.io.IOException
      */
     public static Collection<String> search(FileSystem fs, String[] termArr) throws IOException {
+        if (termArr.length == 0) {
+            return null;
+        }
+
         ArrayList<Collection<String>> results = new ArrayList();
         ArrayList<String> documents = documents(fs, termArr);
         rankDocuments(fs, documents, termArr);
+        BufferedReader tweetDocScanner;
 
         if (!documents.isEmpty()) {
             System.out.println(documents.size() + " documents found.");
 
             if (termArr.length > 1) {
-                for (String document : documents) {
+                for (String docID : documents) {
                     Collection<String> result = new TreeSet<>();
-                    String doc = ThreadedDataLoader.pathStore.get(document);
-
-                    try (Scanner tweetDocScanner = new Scanner(new File(doc))) {
-                        result.add(tweetDocScanner.nextLine());
-                    }
-
+                    String doc = getDocWithID(fs, docID);
+                    tweetDocScanner = getReader(fs, doc);
+                    result.add(tweetDocScanner.readLine());
                     results.add(result);
                 }
 
@@ -75,12 +77,10 @@ public class SearchIndex {
             } else if (termArr.length == 1) {
                 Collection<String> result = new TreeSet<>();
 
-                for (String document : documents) {
-                    String doc = ThreadedDataLoader.pathStore.get(document);
-
-                    try (Scanner tweetDocScanner = new Scanner(new File(doc))) {
-                        result.add(tweetDocScanner.nextLine());
-                    }
+                for (String docID : documents) {
+                    String doc = getDocWithID(fs, docID);
+                    tweetDocScanner = getReader(fs, doc);
+                    result.add(tweetDocScanner.readLine());
                 }
                 return result;
             }
@@ -94,42 +94,25 @@ public class SearchIndex {
      * @param terms
      * @return String
      */
-    private static ArrayList<String> documents(FileSystem fs, String[] termsArr) {
+    private static ArrayList<String> documents(FileSystem fs, String[] termsArr) throws IOException {
         ArrayList<String> docs = new ArrayList();
 
         for (String term : termsArr) {
-            System.out.println("Checking " + Configuration.INDEX_SAVE_DIRECTORY + term.charAt(0) + "/" + term + ".index");
-
-            if (fs == null) {
-                File ind = new File(Configuration.INDEX_SAVE_DIRECTORY + term.charAt(0) + "/" + term + ".index");
-
-                try {
-                    try (Scanner sc = new Scanner(ind)) {
-                        while (sc.hasNextLine()) {
-                            String line = sc.nextLine();
-
-                            if (!line.equals("")) {
-                                docs.add(line);
-                            }
-                        }
-                    }
-                } catch (FileNotFoundException ex) {
-                }
+            BufferedReader reader;
+            
+            if(fs == null) {
+                reader = getReader(fs, "index/" + term.charAt(0) + "/" + term + ".index");
             } else {
-                try {
-                    FSDataInputStream indexStream = fs.open(new Path("sanctum/index/" + term.charAt(0) + "/" + term + ".index"));
-                    Scanner sc = new Scanner(indexStream);
-
-                    while (sc.hasNextLine()) {
-                        String line = sc.nextLine();
-
-                        if (!line.equals("")) {
-                            docs.add(line);
-                        }
-                    }
-                } catch (IOException ex) {
-                    Logger.getLogger(SearchIndex.class.getName()).log(Level.SEVERE, null, ex);
+                reader = getReader(fs, "sanctum/index/" + term + "-m-00000");
+            }
+            
+            String line = reader.readLine();
+            
+            while (line != null) {
+                if (!line.equals("")) {
+                    docs.add(line);
                 }
+                line = reader.readLine();
             }
         }
 
@@ -146,5 +129,31 @@ public class SearchIndex {
         String[] docs = new String[documents.size()];
         documents.toArray(docs);
         Arrays.sort(docs, new DocumentComparator(fs, query));
+    }
+
+    /**
+     * Returns the document with a specific ID from the specified filesystem.
+     * The filesystem object determines which class to fetch the document from.
+     *
+     * @param fs
+     * @param docID
+     * @return String
+     */
+    public static String getDocWithID(FileSystem fs, String docID) {
+        return fs == null ? ThreadedDataLoader.pathStore.get(docID) : HadoopSearch.pathStore.get(docID);
+    }
+
+    /**
+     * Returns a reader for a document from the specified filesystem. The
+     * filesystem object determines how the reader is created.
+     *
+     * @param fs
+     * @param doc
+     * @return BufferedReader
+     * @throws FileNotFoundException
+     * @throws IOException
+     */
+    public static BufferedReader getReader(FileSystem fs, String doc) throws FileNotFoundException, IOException {
+        return fs == null ? new BufferedReader(new FileReader(new File(doc))) : new BufferedReader(new InputStreamReader(fs.open(new Path(doc))));
     }
 }
