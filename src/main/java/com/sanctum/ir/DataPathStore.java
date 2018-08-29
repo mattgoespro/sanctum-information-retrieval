@@ -60,8 +60,8 @@ public class DataPathStore implements Serializable {
      * @param key
      */
     public void put(String key) {
-        this.filePathStore.put(this.filePathStore.size() + "", key);
-        this.inverseStore.put(key, this.filePathStore.size() + "");
+        this.filePathStore.put(key.hashCode() + "", key);
+        this.inverseStore.put(key, key.hashCode() + "");
     }
 
     /**

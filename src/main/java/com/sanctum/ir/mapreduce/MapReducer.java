@@ -17,7 +17,6 @@
  */
 package com.sanctum.ir.mapreduce;
 
-import com.sanctum.ir.Configuration;
 import com.sanctum.ir.IndexWriter;
 import com.sanctum.ir.ThreadedDataLoader;
 import com.sanctum.ir.Tweet;
@@ -39,7 +38,7 @@ public class MapReducer {
     public static BlockingQueue<Mapper> mappers;
     private final ArrayList<Reducer> reducers;
     public static BlockingQueue<Mapper> mapperQueue;
-    public static HashMap<String, ArrayList<Integer>> finalMap = new HashMap();
+    public static HashMap<String, ArrayList<String>> finalMap = new HashMap();
     private final int mappersPerReducer;
     private final int numWriters;
 
@@ -75,7 +74,7 @@ public class MapReducer {
                     mappings.add(mapperQueue.poll().getPairs());
                 }
 
-                Reducer r = new Reducer(mappings, Configuration.INDEX_SAVE_DIRECTORY);
+                Reducer r = new Reducer(mappings);
                 reducers.add(r);
                 r.start();
             }
@@ -87,7 +86,7 @@ public class MapReducer {
                     mappings.add(mapperQueue.poll().getPairs());
                 }
 
-                Reducer r = new Reducer(mappings, Configuration.INDEX_SAVE_DIRECTORY);
+                Reducer r = new Reducer(mappings);
                 reducers.add(r);
                 r.start();
             }
@@ -135,9 +134,9 @@ public class MapReducer {
                 key = key.toLowerCase();
                 
                 if (finalMap.containsKey(key)) {
-                    finalMap.get(key).addAll((ArrayList<Integer>) m.get(k));
+                    finalMap.get(key).addAll((ArrayList<String>) m.get(k));
                 } else {
-                    finalMap.put(key, (ArrayList<Integer>) m.get(k));
+                    finalMap.put(key, (ArrayList<String>) m.get(k));
                 }
             }
         }
@@ -147,7 +146,7 @@ public class MapReducer {
         startTime = System.currentTimeMillis();
         writeIndex();
         System.out.println("done (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec)");
-        System.out.println("Indexing complete.");
+        System.out.print("Indexing complete");
     }
 
     /**
@@ -171,7 +170,7 @@ public class MapReducer {
      * @throws IOException
      */
     private void writeIndex() throws IOException {
-        File indexFolder = new File(Configuration.INDEX_SAVE_DIRECTORY);
+        File indexFolder = new File("index/");
         indexFolder.mkdir();
 
         int cCopy = finalMap.size() / numWriters, c = 0;

@@ -35,9 +35,8 @@ public class Reducer extends Thread {
      * Constructor
      *
      * @param mappings
-     * @param outFile
      */
-    public Reducer(ArrayList<HashMap> mappings, String outFile) {
+    public Reducer(ArrayList<HashMap> mappings) {
         this.mappings = mappings;
         this.reducedPairs = new HashMap();
     }

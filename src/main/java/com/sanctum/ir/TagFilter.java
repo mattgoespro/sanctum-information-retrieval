@@ -64,7 +64,7 @@ public class TagFilter {
             while (lineIterator.hasNext()) {
                 line = lineIterator.nextLine();
 
-                if (!line.startsWith("#")) {
+                if (!line.startsWith("#") && !line.startsWith("START")) {
                     this.tagValueBlacklist.add(line);
                 }
             }

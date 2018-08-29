@@ -31,14 +31,13 @@ import java.util.logging.Logger;
 public class DataLoader {
 
     protected ArrayList<TweetLoader> loaders;
-    public static DataPathStore pathStore;
+    public static DataPathStore pathStore = new DataPathStore();
 
     /**
      * Constructor
      */
     public DataLoader() {
         this.loaders = new ArrayList();
-        DataLoader.pathStore = new DataPathStore();
         
         try {
             pathStore.load(null);

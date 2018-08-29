@@ -159,7 +159,7 @@ public class SearchIndex {
      * @return String
      */
     public static String getDocWithID(FileSystem fs, String docID) {
-        return fs == null ? ThreadedDataLoader.pathStore.get(docID) : HadoopSearch.pathStore.get(docID);
+        return fs == null ? DataLoader.pathStore.get(docID) : HadoopSearch.pathStore.get(docID);
     }
 
     /**
@@ -173,7 +173,6 @@ public class SearchIndex {
      * @throws IOException
      */
     public static BufferedReader getReader(FileSystem fs, String doc) throws FileNotFoundException, IOException {
-        System.out.println(doc);
         return fs == null ? new BufferedReader(new FileReader(new File(doc))) : new BufferedReader(new InputStreamReader(fs.open(new Path(doc))));
     }
 }

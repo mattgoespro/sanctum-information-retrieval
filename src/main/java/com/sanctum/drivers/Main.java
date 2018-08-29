@@ -33,6 +33,7 @@ public class Main {
      * @throws java.io.IOException
      */
     public static void main(String[] args) throws IOException {
+        long startTime = System.currentTimeMillis();
         ThreadedDataLoader loader = new ThreadedDataLoader(10);
         boolean config = Configuration.loadConfiguration(null);
         MapReducer reducer = new MapReducer(2, 100);
@@ -40,6 +41,7 @@ public class Main {
             loader.loadData();
             reducer.mapreduce(loader);
             reducer.merge();
+            System.out.println(" (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec total)");
         } else {
             System.out.println("Failed to load config.");
         }

@@ -36,13 +36,11 @@ public class Configuration {
     private static final String KEY_DATA_DIRECTORY = "Twitter data directory",
             KEY_INDEXING_INCLUDE_HASHTAGS = "Include hashtags",
             KEY_INDEXING_INCLUDE_MENTIONS = "Include mentions",
-            KEY_INDEXING_INCLUDE_LINKS = "Include links",
-            KEY_INDEX_SAVE_DIRECTORY = "Inverted file save directory";
+            KEY_INDEXING_INCLUDE_LINKS = "Include links";
     public static String DATA_DIRECTORY,
             INDEXING_INCLUDE_HASHTAGS,
             INDEXING_INCLUDE_MENTIONS,
-            INDEXING_INCLUDE_LINKS,
-            INDEX_SAVE_DIRECTORY;
+            INDEXING_INCLUDE_LINKS;
 
     /**
      * Loads the configuration. Returns true if successful.
@@ -92,8 +90,6 @@ public class Configuration {
             com.sanctum.ir.Configuration.INDEXING_INCLUDE_MENTIONS = value;
         } else if (line.startsWith(com.sanctum.ir.Configuration.KEY_INDEXING_INCLUDE_LINKS)) {
             com.sanctum.ir.Configuration.INDEXING_INCLUDE_LINKS = value;
-        } else if (line.startsWith(com.sanctum.ir.Configuration.KEY_INDEX_SAVE_DIRECTORY)) {
-            com.sanctum.ir.Configuration.INDEX_SAVE_DIRECTORY = value;
         }
     }
 }

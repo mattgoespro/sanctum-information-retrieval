@@ -49,7 +49,7 @@ public class IndexWriter extends Thread {
         
         for (String key : keys) {
             String f = key.toLowerCase().charAt(0) + "/";
-            File letterIndex = new File(Configuration.INDEX_SAVE_DIRECTORY + f);
+            File letterIndex = new File("index/" + f);
 
             if (!letterIndex.exists()) {
                 letterIndex.mkdir();
@@ -57,9 +57,9 @@ public class IndexWriter extends Thread {
 
             try {
                 String keyDir = key.length() > 30 ? key.substring(0, 30) : key;
-                writer = new FileWriter(new File(Configuration.INDEX_SAVE_DIRECTORY + f + keyDir.toLowerCase() + ".index"));
+                writer = new FileWriter(new File("index/" + f + keyDir.toLowerCase() + ".index"));
                 
-                for (Integer i : MapReducer.finalMap.get(key)) {
+                for (String i : MapReducer.finalMap.get(key)) {
                     writer.write(i + "\n");
                 }
                 
