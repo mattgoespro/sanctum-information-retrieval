@@ -62,7 +62,7 @@ public class HadoopIndex {
                 String[] raw = value.toString().split(" ");
                 ArrayList<String> words = new ArrayList();
                 DataPathStore store = (DataPathStore) fromString(context.getConfiguration().get("pathstore"));
-                String dir = store.getKey("sanctum/index/tweet_" + value.toString().hashCode() + "-m-00000");
+                String dir = store.getKey("sanctum/tweet_documents/tweet_" + value.toString().hashCode() + "-m-00000");
                 DIRECTORY.set(dir);
 
                 for (String w : raw) {
@@ -114,7 +114,7 @@ public class HadoopIndex {
 
             result.set(path);
             String keyDir = key.toString().length() > 30 ? key.toString().substring(0, 30) : key.toString();
-            mos.write(key, result, keyDir);
+            mos.write(result, new Text(), keyDir);
         }
 
         @Override

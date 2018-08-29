@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.TreeSet;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 
@@ -54,6 +55,11 @@ public class SearchIndex {
 
         ArrayList<Collection<String>> results = new ArrayList();
         ArrayList<String> documents = documents(fs, termArr);
+        
+        if(documents == null) {
+            return null;
+        }
+        
         rankDocuments(fs, documents, termArr);
         BufferedReader tweetDocScanner;
 
@@ -94,25 +100,38 @@ public class SearchIndex {
      * @param terms
      * @return String
      */
-    private static ArrayList<String> documents(FileSystem fs, String[] termsArr) throws IOException {
+    private static ArrayList<String> documents(FileSystem fs, String[] termsArr) {
         ArrayList<String> docs = new ArrayList();
 
         for (String term : termsArr) {
-            BufferedReader reader;
+            BufferedReader reader = null;
             
-            if(fs == null) {
-                reader = getReader(fs, "index/" + term.charAt(0) + "/" + term + ".index");
-            } else {
-                reader = getReader(fs, "sanctum/index/" + term + "-m-00000");
-            }
-            
-            String line = reader.readLine();
-            
-            while (line != null) {
-                if (!line.equals("")) {
-                    docs.add(line);
+            try {
+                if (fs == null) {
+                    reader = getReader(fs, "index/" + term.charAt(0) + "/" + term + ".index");
+                } else {
+                    reader = getReader(fs, "sanctum/index/" + term + "-m-00000");
                 }
+            } catch (IOException ex) {
+                System.out.println("Unable to read file for term \"" + term + "\". It may not exist.");
+                return null;
+            }
+
+            String line;
+            
+            try {
                 line = reader.readLine();
+
+                while (line != null) {
+                    if (StringUtils.isNotBlank(line) && StringUtils.isNotEmpty(line)) {
+                        docs.add(line);
+                    }
+                    
+                    line = reader.readLine();
+                }
+            } catch (IOException ex) {
+                System.out.println("Something went wrong trying to read the required file.");
+                return null;
             }
         }
 
@@ -154,6 +173,7 @@ public class SearchIndex {
      * @throws IOException
      */
     public static BufferedReader getReader(FileSystem fs, String doc) throws FileNotFoundException, IOException {
+        System.out.println(doc);
         return fs == null ? new BufferedReader(new FileReader(new File(doc))) : new BufferedReader(new InputStreamReader(fs.open(new Path(doc))));
     }
 }

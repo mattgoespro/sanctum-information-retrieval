@@ -23,6 +23,7 @@ import com.sanctum.ir.Tweet;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Comparator;
+import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 
 /**
@@ -48,29 +49,32 @@ public class DocumentComparator implements Comparator {
 
     @Override
     public int compare(Object o1, Object o2) {
-        if (o1 instanceof String && o2 instanceof String) {
-            String doc1 = (String) o1, doc2 = (String) o2;
+        if (o1 != null && o2 != null) {
+            if (o1 instanceof String && o2 instanceof String) {
+                String doc1 = (String) o1, doc2 = (String) o2;
 
-            double score1 = 0, score2 = 0;
+                if (StringUtils.isNumeric(doc1) && StringUtils.isNumeric(doc2)) {
+                    double score1 = 0, score2 = 0;
 
-            for (String term : queryTerms) {
-                try {
-                    score1 += getTfIdf(doc1, term);
-                    score2 += getTfIdf(doc2, term);
-                } catch (IOException ex) {
-                    System.out.println("Unable to read tf-idf rank for one of the required documents.");
+                    for (String term : queryTerms) {
+                        try {
+                            score1 += getTfIdf(doc1, term);
+                            score2 += getTfIdf(doc2, term);
+                        } catch (IOException ex) {
+                            System.out.println("Unable to read tf-idf rank for one of the required documents.");
+                        }
+                    }
+
+                    if (score1 == score2) {
+                        return 0;
+                    } else if (score1 > score2) {
+                        return 1;
+                    } else {
+                        return -1;
+                    }
                 }
             }
-
-            if (score1 == score2) {
-                return 0;
-            } else if (score1 > score2) {
-                return 1;
-            } else {
-                return -1;
-            }
         }
-
         return -1;
     }
 

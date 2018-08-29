@@ -65,7 +65,7 @@ public class HadoopDocSplit {
         public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
             if (key.toString().equalsIgnoreCase("data_paths_store")) {
                 for (Text val : values) {
-                    mos.write(new Text(val.toString()), new Text("sanctum/index/tweet_" + val.toString() + "-m-00000"), "data_paths_store");
+                    mos.write(new Text(val.toString()), new Text("sanctum/tweet_documents/tweet_" + val.toString() + "-m-00000"), "data_paths_store");
                 }
             } else {
                 result.set(key.toString());
