@@ -36,11 +36,13 @@ public class Configuration {
     private static final String KEY_DATA_DIRECTORY = "Twitter data directory",
             KEY_INDEXING_INCLUDE_HASHTAGS = "Include hashtags",
             KEY_INDEXING_INCLUDE_MENTIONS = "Include mentions",
-            KEY_INDEXING_INCLUDE_LINKS = "Include links";
+            KEY_INDEXING_INCLUDE_LINKS = "Include links",
+            KEY_HADOOP_CONFIG_DIR = "Hadoop config directory";
     public static String DATA_DIRECTORY,
             INDEXING_INCLUDE_HASHTAGS,
             INDEXING_INCLUDE_MENTIONS,
-            INDEXING_INCLUDE_LINKS;
+            INDEXING_INCLUDE_LINKS,
+            HADOOP_CONFIG_DIRECTORY;
 
     /**
      * Loads the configuration. Returns true if successful.
@@ -90,6 +92,8 @@ public class Configuration {
             com.sanctum.ir.Configuration.INDEXING_INCLUDE_MENTIONS = value;
         } else if (line.startsWith(com.sanctum.ir.Configuration.KEY_INDEXING_INCLUDE_LINKS)) {
             com.sanctum.ir.Configuration.INDEXING_INCLUDE_LINKS = value;
+        } else if(line.startsWith(com.sanctum.ir.Configuration.KEY_HADOOP_CONFIG_DIR)) {
+            com.sanctum.ir.Configuration.HADOOP_CONFIG_DIRECTORY = value;
         }
     }
 }

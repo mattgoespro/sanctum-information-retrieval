@@ -171,4 +171,14 @@ public class Tweet {
     public ArrayList<String> getWords() {
         return this.words;
     }
+    
+    @Override
+    public String toString() {
+        String str = "";
+        for(String word : words) {
+            str += word + " ";
+        }
+        
+        return str;
+    }
 }

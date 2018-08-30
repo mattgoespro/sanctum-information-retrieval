@@ -18,7 +18,7 @@
 package com.sanctum.ir;
 
 import com.sanctum.drivers.DocumentComparator;
-import com.sanctum.drivers.HadoopSearch;
+import com.sanctum.drivers.Search;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -130,7 +130,7 @@ public class SearchIndex {
                     line = reader.readLine();
                 }
             } catch (IOException ex) {
-                System.out.println("Something went wrong trying to read the required file.");
+                System.out.println("Something went wrong while trying to read the required file.");
                 return null;
             }
         }
@@ -159,7 +159,7 @@ public class SearchIndex {
      * @return String
      */
     public static String getDocWithID(FileSystem fs, String docID) {
-        return fs == null ? DataLoader.pathStore.get(docID) : HadoopSearch.pathStore.get(docID);
+        return fs == null ? DataLoader.pathStore.get(docID) : Search.pathStore.get(docID);
     }
 
     /**
