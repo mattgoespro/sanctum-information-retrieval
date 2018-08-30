@@ -158,4 +158,13 @@ public class TagFilter {
             }
         }
     }
+    
+    /**
+     * Returns true if the filter blacklists a term when indexing.
+     * @param term
+     * @return boolean
+     */
+    public boolean blacklists(String term) {
+        return this.tagValueBlacklist.contains(term);
+    }
 }

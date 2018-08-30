@@ -21,8 +21,6 @@ import com.sanctum.ir.DataPathStore;
 import com.sanctum.ir.SearchIndex;
 import com.sanctum.ir.TagFilter;
 import com.sanctum.ir.Tweet;
-import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
@@ -42,32 +40,61 @@ public class Search {
      * @throws java.io.IOException
      */
     public static void main(String[] args) throws IOException {
+        if (args.length == 0 || args.length == 1) {
+            System.out.println("Usage: hadoop jar <jar path> <classpath> <search HDFS?> [term 1] [term 2] [term 3 ] ...");
+            return;
+        }
         Configuration conf = new Configuration();
         boolean cfg = com.sanctum.ir.Configuration.loadConfiguration(null);
 
         if (cfg) {
-            conf.addResource(new Path("file:///" + com.sanctum.ir.Configuration.HADOOP_CONFIG_DIRECTORY + "core-site.xml"));
-            conf.addResource(new Path("file:/// " + com.sanctum.ir.Configuration.HADOOP_CONFIG_DIRECTORY + "etc/hadoop/conf/hdfs-site.xml"));
-            FileSystem fs = FileSystem.get(URI.create(conf.get("fs.defaultFS")), conf);
+            FileSystem fs = null;
+            try {
+                if (Boolean.parseBoolean(args[0])) {
+                    conf.addResource(new Path(URI.create(com.sanctum.ir.Configuration.HADOOP_CONFIG_DIRECTORY + "core-site.xml")));
+                    conf.addResource(new Path(URI.create(com.sanctum.ir.Configuration.HADOOP_CONFIG_DIRECTORY + "hdfs-site.xml")));
+                    fs = FileSystem.get(URI.create(conf.get("fs.defaultFS")), conf);
+                }
+            } catch (Exception e) {
+                System.out.println("Usage: hadoop jar <jar path> <classpath> <search HDFS?> [term 1] [term 2] [term 3 ] ...");
+                return;
+            }
+
             pathStore.load(fs);
-            writeSearchResults(fs, SearchIndex.search(fs, args));
+            TagFilter f = new TagFilter();
+            f.loadBlacklist(fs);
+            
+            for (int i = 0; i < args.length; i++) {
+                if(f.blacklists(args[i])) {
+                    args[i] = null;
+                }
+            }
+            
+            Collection<String> search = SearchIndex.search(fs, args);
+
+            if (search != null) {
+                writeSearchResults(fs, search);
+            } else {
+                System.out.println("No results found.");
+            }
         } else {
             System.out.println("Unable to load config.");
         }
     }
-    
+
     /**
      * Writes the results of a search to a file.
+     *
      * @param fs
      * @param results
-     * @throws IOException 
+     * @throws IOException
      */
     private static void writeSearchResults(FileSystem fs, Collection<String> results) throws IOException {
         try (FSDataOutputStream writer = fs.create(new Path("sanctum/search_results"))) {
             for (String result : results) {
                 Tweet t = new Tweet("", 0, result);
                 t.filter();
-                writer.writeBytes(t.toString());
+                writer.writeBytes(t.toString() + "\n");
             }
         }
     }

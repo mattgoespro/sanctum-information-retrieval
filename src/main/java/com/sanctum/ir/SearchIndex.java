@@ -60,7 +60,10 @@ public class SearchIndex {
             return null;
         }
         
-        rankDocuments(fs, documents, termArr);
+        if(documents.size() > 1) {
+            rankDocuments(fs, documents, termArr);
+        }
+        
         BufferedReader tweetDocScanner;
 
         if (!documents.isEmpty()) {
@@ -104,7 +107,9 @@ public class SearchIndex {
         ArrayList<String> docs = new ArrayList();
 
         for (String term : termsArr) {
-            BufferedReader reader = null;
+            if(term == null) continue;
+            
+            BufferedReader reader;
             
             try {
                 if (fs == null) {
@@ -113,7 +118,6 @@ public class SearchIndex {
                     reader = getReader(fs, "sanctum/index/" + term + "-m-00000");
                 }
             } catch (IOException ex) {
-                System.out.println("Unable to read file for term \"" + term + "\". It may not exist.");
                 return null;
             }
 
