@@ -147,7 +147,7 @@ public class SanctumIR extends javax.swing.JFrame {
 
         if (!tweetSearch.getText().equals("") && tweetSearch.getText() != null) {
             try {
-                Collection<String> result = SearchIndex.search(null, tweetSearch.getText().split(" "));
+                Collection<String> result = SearchIndex.search(null, tweetSearch.getText().split(" "), 0);
 
                 if (result != null) {
                     for (String s : result) {

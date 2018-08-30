@@ -41,9 +41,10 @@ public class Search {
      */
     public static void main(String[] args) throws IOException {
         if (args.length == 0 || args.length == 1) {
-            System.out.println("Usage: hadoop jar <jar path> <classpath> <search HDFS?> [term 1] [term 2] [term 3 ] ...");
+            System.out.println("Usage: hadoop jar <jar path> <classpath> <search HDFS?> <top k> [term 1] [term 2] [term 3 ] ...");
             return;
         }
+
         Configuration conf = new Configuration();
         boolean cfg = com.sanctum.ir.Configuration.loadConfiguration(null);
 
@@ -56,27 +57,38 @@ public class Search {
                     fs = FileSystem.get(URI.create(conf.get("fs.defaultFS")), conf);
                 }
             } catch (Exception e) {
-                System.out.println("Usage: hadoop jar <jar path> <classpath> <search HDFS?> [term 1] [term 2] [term 3 ] ...");
+                System.out.println("Usage: hadoop jar <jar path> <classpath> <search HDFS?> <top k> [term 1] [term 2] [term 3 ] ...");
                 return;
             }
 
+            int k = 0;
+
+            try {
+                k = Integer.parseInt(args[1]);
+            } catch (Exception e) {
+                System.out.println("Usage: hadoop jar <jar path> <classpath> <search HDFS?> <top k> [term 1] [term 2] [term 3 ] ...");
+                return;
+            }
+
+            long startTime = System.currentTimeMillis();
             pathStore.load(fs);
             TagFilter f = new TagFilter();
             f.loadBlacklist(fs);
-            
+
             for (int i = 0; i < args.length; i++) {
-                if(f.blacklists(args[i])) {
+                if (f.blacklists(args[i])) {
                     args[i] = null;
                 }
             }
-            
-            Collection<String> search = SearchIndex.search(fs, args);
+
+            Collection<String> search = SearchIndex.search(fs, args, k);
 
             if (search != null) {
                 writeSearchResults(fs, search);
             } else {
                 System.out.println("No results found.");
             }
+            System.out.println("Search complete (" + (System.currentTimeMillis() - startTime) / 100.0 + " sec)");
         } else {
             System.out.println("Unable to load config.");
         }

@@ -41,14 +41,15 @@ import org.apache.hadoop.fs.Path;
 public class SearchIndex {
 
     /**
-     * Returns all Tweets containing a specific term.
+     * Returns the top k Tweets containing a specific term.
      *
      * @param fs
      * @param termArr
+     * @param k
      * @return ArrayList
      * @throws java.io.IOException
      */
-    public static Collection<String> search(FileSystem fs, String[] termArr) throws IOException {
+    public static Collection<String> search(FileSystem fs, String[] termArr, int k) throws IOException {
         if (termArr.length == 0) {
             return null;
         }
@@ -64,15 +65,19 @@ public class SearchIndex {
             rankDocuments(fs, documents, termArr);
         }
         
+        if(k == 0) {
+            k = documents.size() > 10000000 ? 10000000 : documents.size();
+        }
+        
         BufferedReader tweetDocScanner;
-
+        
         if (!documents.isEmpty()) {
             System.out.println(documents.size() + " documents found.");
 
             if (termArr.length > 1) {
-                for (String docID : documents) {
+                for (int i = 0; i < k; i++) {
                     Collection<String> result = new TreeSet<>();
-                    String doc = getDocWithID(fs, docID);
+                    String doc = getDocWithID(fs, documents.get(i));
                     tweetDocScanner = getReader(fs, doc);
                     result.add(tweetDocScanner.readLine());
                     results.add(result);
@@ -86,8 +91,8 @@ public class SearchIndex {
             } else if (termArr.length == 1) {
                 Collection<String> result = new TreeSet<>();
 
-                for (String docID : documents) {
-                    String doc = getDocWithID(fs, docID);
+                for (int i = 0; i < k; i++) {
+                    String doc = getDocWithID(fs, documents.get(i));
                     tweetDocScanner = getReader(fs, doc);
                     result.add(tweetDocScanner.readLine());
                 }
