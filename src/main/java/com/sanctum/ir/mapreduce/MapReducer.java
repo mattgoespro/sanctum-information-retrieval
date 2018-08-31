@@ -37,6 +37,7 @@ public class MapReducer {
 
     public static BlockingQueue<Mapper> mappers;
     private final ArrayList<Reducer> reducers;
+    private final ArrayList<IndexWriter> writers;
     public static BlockingQueue<Mapper> mapperQueue;
     public static HashMap<String, ArrayList<String>> finalMap = new HashMap();
     private final int mappersPerReducer;
@@ -51,6 +52,7 @@ public class MapReducer {
     public MapReducer(int mappersPerReducer, int numWriters) {
         MapReducer.mappers = new LinkedBlockingQueue();
         this.reducers = new ArrayList();
+        this.writers = new ArrayList();
         MapReducer.mapperQueue = new ArrayBlockingQueue(100000000);
         this.mappersPerReducer = mappersPerReducer;
         this.numWriters = numWriters;
@@ -145,19 +147,36 @@ public class MapReducer {
         System.out.print("Writing index...");
         startTime = System.currentTimeMillis();
         writeIndex();
+        
+        while(!doneWriting()) {
+            // wait
+        }
+        
         System.out.println("done (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec)");
         System.out.print("Indexing complete");
     }
 
     /**
      * Checks if all reducers have finished processing.
-     *
      * @return boolean
      */
     private boolean doneReducing() {
         boolean done = true;
 
         for (Reducer r : this.reducers) {
+            done &= r.done;
+        }
+        return done;
+    }
+    
+    /**
+     * Checks if all writers have finished writing.
+     * @return boolean
+     */
+    private boolean doneWriting() {
+        boolean done = true;
+        
+        for (IndexWriter r : this.writers) {
             done &= r.done;
         }
         return done;
@@ -181,6 +200,7 @@ public class MapReducer {
                 c = 0;
                 IndexWriter writer = new IndexWriter(keys);
                 writer.start();
+                writers.add(writer);
                 keys = new ArrayList();
             }
             keys.add(k);

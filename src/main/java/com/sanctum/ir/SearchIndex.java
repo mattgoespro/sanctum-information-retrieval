@@ -17,7 +17,6 @@
  */
 package com.sanctum.ir;
 
-import com.sanctum.drivers.DocumentComparator;
 import com.sanctum.drivers.Search;
 import java.io.BufferedReader;
 import java.io.File;
@@ -28,6 +27,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.TreeSet;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
@@ -54,48 +54,69 @@ public class SearchIndex {
             return null;
         }
 
-        ArrayList<Collection<String>> results = new ArrayList();
         ArrayList<String> documents = documents(fs, termArr);
-        
-        if(documents == null) {
-            return null;
-        }
-        
-        if(documents.size() > 1) {
+
+        if (documents.size() > 1) {
             rankDocuments(fs, documents, termArr);
         }
-        
-        if(k == 0) {
+
+        if (k == 0) {
             k = documents.size() > 10000000 ? 10000000 : documents.size();
         }
-        
+
         BufferedReader tweetDocScanner;
-        
+
         if (!documents.isEmpty()) {
-            System.out.println(documents.size() + " documents found.");
-
+            System.out.println(documents.size() + " documents found, returning " + k + ".");
+            int count = 0;
+            TreeSet<String> result = new TreeSet<>();
             if (termArr.length > 1) {
-                for (int i = 0; i < k; i++) {
-                    Collection<String> result = new TreeSet<>();
-                    String doc = getDocWithID(fs, documents.get(i));
+                for (String docID : documents) {
+                    if (count == k) {
+                        break;
+                    }
+
+                    String doc = getDocWithID(fs, docID);
                     tweetDocScanner = getReader(fs, doc);
                     result.add(tweetDocScanner.readLine());
-                    results.add(result);
+                    count++;
                 }
 
-                for (int i = 1; i < results.size(); i++) {
-                    results.get(0).retainAll(results.get(i));
+                Iterator<String> t = result.iterator();
+
+                while (t.hasNext()) {
+                    String copy = t.next().replace(" ", "").toLowerCase();
+
+                    int c = 0;
+                    for (String term : termArr) {
+                        if (term == null) {
+                            c++;
+                            continue;
+                        }
+                        if (copy.contains(term.toLowerCase())) {
+                            System.out.println(copy + " contains " + term);
+                            c++;
+                        }
+                    }
+
+                    if (c < termArr.length) {
+                        t.remove();
+                    }
                 }
 
-                return results.get(0);
+                return result;
             } else if (termArr.length == 1) {
-                Collection<String> result = new TreeSet<>();
+                for (String docID : documents) {
+                    if (count == k) {
+                        break;
+                    }
 
-                for (int i = 0; i < k; i++) {
-                    String doc = getDocWithID(fs, documents.get(i));
+                    String doc = getDocWithID(fs, docID);
                     tweetDocScanner = getReader(fs, doc);
                     result.add(tweetDocScanner.readLine());
+                    count++;
                 }
+
                 return result;
             }
         }
@@ -112,10 +133,12 @@ public class SearchIndex {
         ArrayList<String> docs = new ArrayList();
 
         for (String term : termsArr) {
-            if(term == null) continue;
-            
+            if (term == null) {
+                continue;
+            }
+
             BufferedReader reader;
-            
+
             try {
                 if (fs == null) {
                     reader = getReader(fs, "index/" + term.charAt(0) + "/" + term + ".index");
@@ -127,7 +150,7 @@ public class SearchIndex {
             }
 
             String line;
-            
+
             try {
                 line = reader.readLine();
 
@@ -135,7 +158,7 @@ public class SearchIndex {
                     if (StringUtils.isNotBlank(line) && StringUtils.isNotEmpty(line)) {
                         docs.add(line);
                     }
-                    
+
                     line = reader.readLine();
                 }
             } catch (IOException ex) {
@@ -168,7 +191,7 @@ public class SearchIndex {
      * @return String
      */
     public static String getDocWithID(FileSystem fs, String docID) {
-        return fs == null ? DataLoader.pathStore.get(docID) : Search.pathStore.get(docID);
+        return Search.pathStore.get(docID);
     }
 
     /**

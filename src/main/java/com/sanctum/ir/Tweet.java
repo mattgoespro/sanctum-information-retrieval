@@ -32,29 +32,20 @@ public class Tweet {
 
     private TagFilter filter;
     private final String containedFile;
-    private final int tweetIndex;
     private final String rawText;
     private ArrayList<String> words;
     private String[] tokenizedRawText;
-    private ArrayList<String> mentions;
-    private ArrayList<String> hashtags;
-    private ArrayList<String> links;
 
     /**
      * Constructor
      *
      * @param containedFile
-     * @param tweetIndex
      * @param rawText
      */
-    public Tweet(String containedFile, int tweetIndex, String rawText) {
+    public Tweet(String containedFile, String rawText) {
         this.containedFile = containedFile;
-        this.tweetIndex = tweetIndex;
         this.rawText = rawText;
         this.words = new ArrayList();
-        this.mentions = new ArrayList();
-        this.hashtags = new ArrayList();
-        this.links = new ArrayList();
         this.filter = new TagFilter();
 
         try {
@@ -68,7 +59,6 @@ public class Tweet {
 
     /**
      * Tags the text of the tweet with its parts of speech.
-     *
      */
     public void filter() {
         tokenizedRawText = rawText.split(" ");
@@ -91,66 +81,6 @@ public class Tweet {
     }
 
     /**
-     * Returns the mentions in the text if it has any.
-     *
-     * @return String[]
-     */
-    public ArrayList<String> getMentions() {
-        // retrieve mentions
-        if (filter.includesMentions()) {
-            for (String word : tokenizedRawText) {
-                if (word.startsWith("@")) {
-                    this.mentions.add(word);
-                }
-            }
-        }
-        return this.mentions;
-    }
-
-    /**
-     * Returns the hashtags in the text if it has any.
-     *
-     * @return
-     */
-    public ArrayList<String> getHashtags() {
-        // retrieve hashtags
-        if (filter.includesHashtags()) {
-            for (String word : tokenizedRawText) {
-                if (word.startsWith("#")) {
-                    this.hashtags.add(word);
-                }
-            }
-        }
-        return this.hashtags;
-    }
-
-    /**
-     * Returns the links in the text if it has any.
-     *
-     * @return
-     */
-    public ArrayList<String> getLinks() {
-        // retrieve links
-        if (filter.includesLinks()) {
-            for (String word : tokenizedRawText) {
-                if (word.startsWith("http://")) {
-                    this.links.add(word);
-                }
-            }
-        }
-        return this.links;
-    }
-
-    /**
-     * Returns the original text of the tweet.
-     *
-     * @return String
-     */
-    public String getRawText() {
-        return this.rawText;
-    }
-
-    /**
      * Returns the directory of the file containing this Tweet.
      *
      * @return Strings
@@ -158,16 +88,11 @@ public class Tweet {
     public String getContainingFileName() {
         return this.containedFile;
     }
-
+    
     /**
-     * Returns the line number of the Tweet in its containing file.
-     *
-     * @return
+     * Returns a list of filtered words in the Tweet.
+     * @return ArrayList
      */
-    public int getTweetIndex() {
-        return this.tweetIndex;
-    }
-
     public ArrayList<String> getWords() {
         return this.words;
     }

@@ -18,6 +18,7 @@
 package com.sanctum.ir;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Scanner;
 import org.apache.commons.io.IOUtils;
@@ -49,33 +50,42 @@ public class Configuration {
      *
      * @param fs
      * @return boolean
-     * @throws java.io.IOException
      */
-    public static boolean loadConfiguration(FileSystem fs) throws IOException {
+    public static boolean loadConfiguration(FileSystem fs) {
         if (fs != null) {
-            FSDataInputStream cfgStream = fs.open(new Path("sanctum/config.cfg"));
-            LineIterator lineIterator = IOUtils.lineIterator(cfgStream, "UTF-8");
-            String line;
-
-            while (lineIterator.hasNext()) {
-                line = lineIterator.nextLine();
-                setConfigValue(line);
+            FSDataInputStream cfgStream;
+            try {
+                cfgStream = fs.open(new Path("sanctum/config.cfg"));
+                LineIterator lineIterator = IOUtils.lineIterator(cfgStream, "UTF-8");
+                String line;
+                while (lineIterator.hasNext()) {
+                    line = lineIterator.nextLine();
+                    setConfigValue(line);
+                }   return true;
+            } catch (IOException ex) {
+                return false;
             }
-            
-            return true;
         } else {
-            Scanner scFile = new Scanner(new File("config.cfg"));
-            String line;
-
-            while (scFile.hasNext()) {
-                line = scFile.nextLine();
-                setConfigValue(line);
+            try {
+                Scanner scFile = new Scanner(new File("config.cfg"));
+                String line;
+                
+                while (scFile.hasNext()) {
+                    line = scFile.nextLine();
+                    setConfigValue(line);
+                }
+                
+                return true;
+            } catch (FileNotFoundException ex) {
+                return false;
             }
-
-            return true;
         }
     }
-
+    
+    /**
+     * Sets a Configuration class value.
+     * @param line 
+     */
     private static void setConfigValue(String line) {
         if (line.startsWith("#") || line.startsWith(" ") || line.equals("") || line.startsWith("\n")) {
             return;

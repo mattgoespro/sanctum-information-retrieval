@@ -84,60 +84,6 @@ public class TagFilter {
     }
 
     /**
-     * Choose whether to include mentions in the indexing.
-     *
-     * @param inclMentions
-     */
-    public void includeMentions(boolean inclMentions) {
-        this.inclMentions = inclMentions;
-    }
-
-    /**
-     * Returns whether the filter should include mentions in indexing.
-     *
-     * @return boolean
-     */
-    public boolean includesMentions() {
-        return this.inclMentions;
-    }
-
-    /**
-     * Choose whether to include hashtags in the indexing.
-     *
-     * @param inclHashtags
-     */
-    public void includeHashtags(boolean inclHashtags) {
-        this.inclHashtags = inclHashtags;
-    }
-
-    /**
-     * Returns whether the filter should include hashtags in indexing.
-     *
-     * @return boolean
-     */
-    public boolean includesHashtags() {
-        return this.inclHashtags;
-    }
-
-    /**
-     * Choose whether to include links in the indexing.
-     *
-     * @param inclLinks
-     */
-    public void includeLinks(boolean inclLinks) {
-        this.inclLinks = inclLinks;
-    }
-
-    /**
-     * Returns whether the filter should include links in indexing.
-     *
-     * @return boolean
-     */
-    public boolean includesLinks() {
-        return this.inclLinks;
-    }
-
-    /**
      * Filters the text for indexing.
      *
      * @param words

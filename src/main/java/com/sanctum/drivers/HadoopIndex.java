@@ -133,10 +133,10 @@ public class HadoopIndex {
         conf.addResource(new Path("file:///etc/hadoop/conf/hdfs-site.xml"));
         FileSystem fs = FileSystem.get(URI.create(conf.get("fs.defaultFS")), conf);
 
-        boolean irConfig = com.sanctum.ir.Configuration.loadConfiguration(fs);
+        boolean irConfig = com.sanctum.ir.Configuration.loadConfiguration(null);
 
         if (irConfig) {
-            filter.loadBlacklist(fs);
+            filter.loadBlacklist(null);
             pathStore.load(fs);
             conf.set("pathstore", toString(pathStore));
 
@@ -152,7 +152,9 @@ public class HadoopIndex {
             fs.close();
             System.exit(job.waitForCompletion(true) ? 0 : 1);
         } else {
-            System.out.println("Unable to load config file.");
+            System.out.println("Unable to load config file. Either there is a syntax error in"
+                    + "the config or 'config.cfg' could not be found. Make sure it is in the same"
+                    + "directory as the jar.");
         }
     }
 

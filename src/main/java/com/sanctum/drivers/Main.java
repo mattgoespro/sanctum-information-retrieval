@@ -43,7 +43,9 @@ public class Main {
             reducer.merge();
             System.out.println(" (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec total)");
         } else {
-            System.out.println("Failed to load config.");
+            System.out.println("Unable to load config file. Either there is a syntax error in"
+                    + "the config or 'config.cfg' could not be found. Make sure it is in the same"
+                    + "directory as the jar.");
         }
     }
 

@@ -21,6 +21,8 @@ import com.sanctum.ir.DataPathStore;
 import com.sanctum.ir.SearchIndex;
 import com.sanctum.ir.TagFilter;
 import com.sanctum.ir.Tweet;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.net.URI;
 import java.util.Collection;
@@ -40,7 +42,7 @@ public class Search {
      * @throws java.io.IOException
      */
     public static void main(String[] args) throws IOException {
-        if (args.length == 0 || args.length == 1) {
+        if (args.length == 0 || args.length == 1 || args.length == 2) {
             System.out.println("Usage: hadoop jar <jar path> <classpath> <search HDFS?> <top k> [term 1] [term 2] [term 3 ] ...");
             return;
         }
@@ -80,8 +82,14 @@ public class Search {
                     args[i] = null;
                 }
             }
-
-            Collection<String> search = SearchIndex.search(fs, args, k);
+            
+            String[] arguments = new String[args.length - 2];
+            
+            for (int i = 2; i < args.length; i++) {
+                arguments[i-2] = args[i];
+            }
+            
+            Collection<String> search = SearchIndex.search(fs, arguments, k);
 
             if (search != null) {
                 writeSearchResults(fs, search);
@@ -102,11 +110,24 @@ public class Search {
      * @throws IOException
      */
     private static void writeSearchResults(FileSystem fs, Collection<String> results) throws IOException {
-        try (FSDataOutputStream writer = fs.create(new Path("sanctum/search_results"))) {
-            for (String result : results) {
-                Tweet t = new Tweet("", 0, result);
-                t.filter();
-                writer.writeBytes(t.toString() + "\n");
+        if (fs != null) {
+            try (FSDataOutputStream writer = fs.create(new Path("sanctum/search_results"))) {
+                for (String result : results) {
+                    Tweet t = new Tweet("", result);
+                    t.filter();
+                    writer.writeBytes(t.toString() + "\n");
+                }
+            }
+        } else {
+            File f = new File("search_results");
+            f.mkdir();
+            
+            try (FileWriter writer = new FileWriter("search_results/search")) {
+                for (String result : results) {
+                    Tweet t = new Tweet("", result);
+                    t.filter();
+                    writer.write(t.toString() + "\n");
+                }
             }
         }
     }

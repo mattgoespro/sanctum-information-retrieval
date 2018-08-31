@@ -46,50 +46,23 @@ public class TweetLoader {
 
     /**
      * Reads the Tweets from the file specified.
+     *
      * @throws java.io.IOException
      */
     public void readTweets() throws IOException {
-        this.tweets = new Tweet[fileSize(this.fileName)];
+        this.tweets = new Tweet[60000];
         BufferedReader fileReader = new BufferedReader(new FileReader(this.fileName));
         int count = 0;
         String line = fileReader.readLine();
-        
+
         while (line != null) {
             if (!line.equals("")) {
-                this.tweets[count] = new Tweet(this.fileName, count, line);
+                this.tweets[count] = new Tweet(this.fileName, line);
                 this.tweets[count].filter();
                 ++count;
             }
             line = fileReader.readLine();
         }
-    }
-
-    /**
-     * Returns the number of lines in a File.
-     *
-     * @param fileName
-     * @return Integer
-     * @throws FileNotFoundException
-     * @throws IOException
-     */
-    public static int fileSize(String fileName) throws FileNotFoundException, IOException {
-        int lines;
-        try (BufferedReader reader = new BufferedReader(new FileReader(fileName))) {
-            lines = 0;
-            while (reader.readLine() != null) {
-                lines++;
-            }
-        }
-        return lines;
-    }
-
-    /**
-     * Returns the file that is being read.
-     *
-     * @return File
-     */
-    public File getFile() {
-        return this.file;
     }
 
     /**

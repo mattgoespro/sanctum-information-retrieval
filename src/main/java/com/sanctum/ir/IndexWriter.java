@@ -30,6 +30,7 @@ import java.util.ArrayList;
 public class IndexWriter extends Thread {
     
     private final ArrayList<String> keys;
+    public volatile boolean done = false;
     
     /**
      * Constructor 
@@ -66,5 +67,7 @@ public class IndexWriter extends Thread {
                 writer.close();
             } catch (IOException e) {}
         }
+        
+        done = true;
     }
 }

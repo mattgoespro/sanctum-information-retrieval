@@ -29,7 +29,6 @@ import java.util.HashMap;
  */
 public class Mapper extends Thread {
 
-    public volatile boolean done = false;
     private final Tweet[] tweets;
     private final HashMap<String, ArrayList<String>> pairs;
 
