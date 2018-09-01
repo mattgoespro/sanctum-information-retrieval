@@ -37,7 +37,9 @@ import org.apache.hadoop.fs.Path;
 public class TagFilter {
 
     private final ArrayList<String> tagValueBlacklist;
-    private boolean inclMentions, inclHashtags, inclLinks;
+    private final boolean inclMentions;
+    private final boolean inclHashtags;
+    private final boolean inclLinks;
 
     /**
      * Constructor

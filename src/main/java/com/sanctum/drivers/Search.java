@@ -18,7 +18,7 @@
 package com.sanctum.drivers;
 
 import com.sanctum.ir.DataPathStore;
-import com.sanctum.ir.SearchIndex;
+import com.sanctum.ir.search.SearchIndex;
 import com.sanctum.ir.TagFilter;
 import com.sanctum.ir.Tweet;
 import java.io.File;

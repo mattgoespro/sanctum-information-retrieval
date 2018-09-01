@@ -17,7 +17,6 @@
  */
 package com.sanctum.ir.mapreduce;
 
-import com.sanctum.ir.IndexWriter;
 import com.sanctum.ir.ThreadedDataLoader;
 import com.sanctum.ir.Tweet;
 import java.io.File;

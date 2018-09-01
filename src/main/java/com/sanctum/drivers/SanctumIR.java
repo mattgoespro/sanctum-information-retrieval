@@ -18,7 +18,7 @@
 package com.sanctum.drivers;
 
 import com.sanctum.ir.Configuration;
-import com.sanctum.ir.SearchIndex;
+import com.sanctum.ir.search.SearchIndex;
 import com.sanctum.ir.ThreadedDataLoader;
 import com.sanctum.ir.mapreduce.MapReducer;
 import java.io.IOException;
