@@ -19,8 +19,11 @@ package com.sanctum.ir;
 
 import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Loads the text from a file into its respective Tweets.
@@ -32,6 +35,7 @@ public class TweetLoader {
     protected File file;
     protected String fileName;
     protected Tweet[] tweets;
+    protected TagFilter filter;
 
     /**
      * Constructor
@@ -41,6 +45,12 @@ public class TweetLoader {
     public TweetLoader(String fileName) {
         this.fileName = fileName;
         this.file = new File(fileName);
+        this.filter = new TagFilter();
+
+        try {
+            this.filter.loadBlacklist(null);
+        } catch (FileNotFoundException ex) {}
+        catch (IOException ex) {}
     }
 
     /**
@@ -56,7 +66,7 @@ public class TweetLoader {
 
         while (line != null) {
             if (!line.equals("")) {
-                this.tweets[count] = new Tweet(this.fileName, line);
+                this.tweets[count] = new Tweet(this.fileName, line, filter);
                 this.tweets[count].filter();
                 ++count;
             }

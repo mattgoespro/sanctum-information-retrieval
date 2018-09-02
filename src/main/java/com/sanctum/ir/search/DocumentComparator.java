@@ -17,11 +17,14 @@
  */
 package com.sanctum.ir.search;
 
+import com.sanctum.ir.TagFilter;
 import com.sanctum.ir.ThreadedDataLoader;
 import com.sanctum.ir.Tweet;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Comparator;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import org.apache.commons.lang.StringUtils;
 import org.apache.hadoop.fs.FileSystem;
 
@@ -34,6 +37,7 @@ public class DocumentComparator implements Comparator {
 
     private final String[] queryTerms;
     private final FileSystem fs;
+    private TagFilter filter;
 
     /**
      * Constructor
@@ -44,6 +48,13 @@ public class DocumentComparator implements Comparator {
     public DocumentComparator(FileSystem fs, String[] queryTerms) {
         this.fs = fs;
         this.queryTerms = queryTerms;
+        this.filter = new TagFilter();
+        
+        try {
+            filter.loadBlacklist(fs);
+        } catch (IOException ex) {
+            Logger.getLogger(DocumentComparator.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     @Override
@@ -86,7 +97,7 @@ public class DocumentComparator implements Comparator {
      */
     private double getTfIdf(String doc, String term) throws IOException {
         BufferedReader reader = SearchIndex.getReader(fs, SearchIndex.getDocWithID(fs, doc));
-        Tweet t = new Tweet("", reader.readLine());
+        Tweet t = new Tweet("", reader.readLine(), filter);
         t.filter();
         int tf = 0;
 

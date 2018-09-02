@@ -94,7 +94,6 @@ public class SearchIndex {
                             continue;
                         }
                         if (copy.contains(term.toLowerCase())) {
-                            System.out.println(copy + " contains " + term);
                             c++;
                         }
                     }
@@ -191,7 +190,7 @@ public class SearchIndex {
      * @return String
      */
     public static String getDocWithID(FileSystem fs, String docID) {
-        return Search.pathStore.get(docID);
+        return fs == null ? Search.pathStore.get(docID) : "sanctum/tweet_documents/tweet_" + docID + "-m-00000a";
     }
 
     /**

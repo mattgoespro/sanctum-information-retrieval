@@ -58,7 +58,7 @@ public class Search {
                     conf.addResource(new Path(URI.create(com.sanctum.ir.Configuration.HADOOP_CONFIG_DIRECTORY + "hdfs-site.xml")));
                     fs = FileSystem.get(URI.create(conf.get("fs.defaultFS")), conf);
                 }
-            } catch (Exception e) {
+            } catch (IOException e) {
                 System.out.println("Usage: hadoop jar <jar path> <classpath> <search HDFS?> <top k> [term 1] [term 2] [term 3 ] ...");
                 return;
             }
@@ -67,7 +67,7 @@ public class Search {
 
             try {
                 k = Integer.parseInt(args[1]);
-            } catch (Exception e) {
+            } catch (NumberFormatException e) {
                 System.out.println("Usage: hadoop jar <jar path> <classpath> <search HDFS?> <top k> [term 1] [term 2] [term 3 ] ...");
                 return;
             }
@@ -92,11 +92,11 @@ public class Search {
             Collection<String> search = SearchIndex.search(fs, arguments, k);
 
             if (search != null) {
-                writeSearchResults(fs, search);
+                writeSearchResults(fs, search, f);
             } else {
                 System.out.println("No results found.");
             }
-            System.out.println("Search complete (" + (System.currentTimeMillis() - startTime) / 100.0 + " sec)");
+            System.out.println("Search complete (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec)");
         } else {
             System.out.println("Unable to load config.");
         }
@@ -109,11 +109,11 @@ public class Search {
      * @param results
      * @throws IOException
      */
-    private static void writeSearchResults(FileSystem fs, Collection<String> results) throws IOException {
+    private static void writeSearchResults(FileSystem fs, Collection<String> results, TagFilter filter) throws IOException {
         if (fs != null) {
             try (FSDataOutputStream writer = fs.create(new Path("sanctum/search_results"))) {
                 for (String result : results) {
-                    Tweet t = new Tweet("", result);
+                    Tweet t = new Tweet("", result, filter);
                     t.filter();
                     writer.writeBytes(t.toString() + "\n");
                 }
@@ -124,7 +124,7 @@ public class Search {
             
             try (FileWriter writer = new FileWriter("search_results/search")) {
                 for (String result : results) {
-                    Tweet t = new Tweet("", result);
+                    Tweet t = new Tweet("", result, filter);
                     t.filter();
                     writer.write(t.toString() + "\n");
                 }

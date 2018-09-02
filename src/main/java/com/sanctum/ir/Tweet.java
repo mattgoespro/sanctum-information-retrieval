@@ -30,10 +30,10 @@ import java.util.logging.Logger;
  */
 public class Tweet {
 
-    private TagFilter filter;
+    private final TagFilter filter;
     private final String containedFile;
     private final String rawText;
-    private ArrayList<String> words;
+    private final ArrayList<String> words;
     private String[] tokenizedRawText;
 
     /**
@@ -41,20 +41,13 @@ public class Tweet {
      *
      * @param containedFile
      * @param rawText
+     * @param filter
      */
-    public Tweet(String containedFile, String rawText) {
+    public Tweet(String containedFile, String rawText, TagFilter filter) {
         this.containedFile = containedFile;
         this.rawText = rawText;
         this.words = new ArrayList();
-        this.filter = new TagFilter();
-
-        try {
-            this.filter.loadBlacklist(null);
-        } catch (FileNotFoundException ex) {
-            System.out.println("Unable to load blacklist file.");
-        } catch (IOException ex) {
-            Logger.getLogger(Tweet.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        this.filter = filter;
     }
 
     /**

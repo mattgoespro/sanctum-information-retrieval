@@ -17,7 +17,6 @@
  */
 package com.sanctum.drivers;
 
-import com.sanctum.ir.DataPathStore;
 import com.sanctum.ir.TagFilter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
@@ -28,9 +27,8 @@ import java.io.Serializable;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Base64;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import org.apache.hadoop.conf.Configuration;
+import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.io.Text;
@@ -45,9 +43,6 @@ public class HadoopIndex {
 
     public static class TokenizerMapper extends Mapper<Object, Text, Text, Text> {
 
-        private static final Text DIRECTORY = new Text();
-        private final Text word = new Text();
-
         /**
          *
          * @param key
@@ -58,36 +53,25 @@ public class HadoopIndex {
          */
         @Override
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-            try {
-                String[] raw = value.toString().split(" ");
-                ArrayList<String> words = new ArrayList();
-                DataPathStore store = (DataPathStore) fromString(context.getConfiguration().get("pathstore"));
-                String dir = store.getKey("sanctum/tweet_documents/tweet_" + value.toString().hashCode() + "-m-00000");
-                DIRECTORY.set(dir);
+            String[] raw = value.toString().split(" ");
+            String dir = "sanctum/tweet_documents/tweet_" + value.toString().hashCode() + "-m-00000";
 
-                for (String w : raw) {
-                    if (!w.startsWith("http")) {
-                        w = w.replaceAll("\\p{Punct}", " ");
-                        String[] process = w.split(" ");
+            // hello my name is matt.i am from south africa?
+            for (String w : raw) {
+                if (!w.startsWith("http")) {
+                    w = w.replaceAll("\\p{Punct}", " ");
+                    String[] process = w.split(" ");
 
-                        for (String s : process) {
-                            if (!s.equals("")) {
-                                words.add(s);
-                            }
+                    for (String s : process) {
+                        if (!s.equals("") && !HadoopIndex.filter.blacklists(s)) {
+                            context.write(new Text(s), new Text(dir));
                         }
-                    } else {
-                        words.add(w);
+                    }
+                } else {
+                    if (!w.equals("") && !HadoopIndex.filter.blacklists(w)) {
+                        context.write(new Text(w), new Text(dir));
                     }
                 }
-
-                HadoopIndex.filter.filterText(words);
-
-                for (String w : words) {
-                    word.set(w);
-                    context.write(word, DIRECTORY);
-                }
-            } catch (ClassNotFoundException ex) {
-                Logger.getLogger(HadoopIndex.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
     }
@@ -95,7 +79,6 @@ public class HadoopIndex {
     public static class PathReducer extends Reducer<Text, Text, Text, Text> {
 
         private MultipleOutputs mos;
-        private final Text result = new Text();
 
         @Override
         public void setup(Context context) {
@@ -104,17 +87,18 @@ public class HadoopIndex {
 
         @Override
         public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-            String path = "";
-
-            for (Text val : values) {
-                if (!val.toString().equals("") && !path.contains(val.toString())) {
-                    path += val.toString() + "\n";
-                }
+            if (key.toString().equalsIgnoreCase("part")) {
+                return;
             }
 
-            result.set(path);
             String keyDir = key.toString().length() > 30 ? key.toString().substring(0, 30) : key.toString();
-            mos.write(result, new Text(), keyDir);
+            FileSystem fs = FileSystem.get(URI.create(context.getConfiguration().get("fs.defaultFS")), context.getConfiguration());
+            
+            try (FSDataOutputStream w = fs.create(new Path("sanctum/index/" + keyDir + "-m-00000"))) {
+                for (Text val : values) {
+                    w.writeBytes(val.toString() + "\n");
+                }
+            }
         }
 
         @Override
@@ -125,9 +109,9 @@ public class HadoopIndex {
     }
 
     public static TagFilter filter = new TagFilter();
-    public static DataPathStore pathStore = new DataPathStore();
 
     public static void main(String[] args) throws Exception {
+        long startTime = System.currentTimeMillis();
         Configuration conf = new Configuration();
         conf.addResource(new Path("file:///etc/hadoop/conf/core-site.xml"));
         conf.addResource(new Path("file:///etc/hadoop/conf/hdfs-site.xml"));
@@ -137,9 +121,6 @@ public class HadoopIndex {
 
         if (irConfig) {
             filter.loadBlacklist(null);
-            pathStore.load(fs);
-            conf.set("pathstore", toString(pathStore));
-
             Job job = Job.getInstance(conf, "word paths");
             job.setJarByClass(HadoopIndex.class);
             job.setMapperClass(TokenizerMapper.class);
@@ -150,7 +131,8 @@ public class HadoopIndex {
             FileInputFormat.addInputPath(job, new Path("sanctum/data"));
             FileOutputFormat.setOutputPath(job, new Path("sanctum/index"));
             fs.close();
-            System.exit(job.waitForCompletion(true) ? 0 : 1);
+            job.waitForCompletion(true);
+            System.out.println("Job complete (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec)");
         } else {
             System.out.println("Unable to load config file. Either there is a syntax error in"
                     + "the config or 'config.cfg' could not be found. Make sure it is in the same"

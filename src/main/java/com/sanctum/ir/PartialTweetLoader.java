@@ -60,7 +60,7 @@ public class PartialTweetLoader extends TweetLoader {
         while (line != null) {
             if (currLine >= startLine) {
                 String docName = writeTweetDocument(line);
-                this.tweets[count] = new Tweet(docName, line);
+                this.tweets[count] = new Tweet(docName, line, super.filter);
                 this.tweets[count].filter();
                 
                 ++count;

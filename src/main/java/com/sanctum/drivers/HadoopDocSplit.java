@@ -17,7 +17,6 @@
  */
 package com.sanctum.drivers;
 
-import com.sanctum.ir.DataPathStore;
 import java.io.IOException;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.Path;
@@ -33,8 +32,6 @@ public class HadoopDocSplit {
 
     public static class DocSplitMapper extends Mapper<Object, Text, Text, Text> {
 
-        private final Text tweet = new Text();
-
         /**
          *
          * @param key
@@ -45,16 +42,13 @@ public class HadoopDocSplit {
          */
         @Override
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
-            tweet.set(value.toString());
-            context.write(tweet, new Text());
-            context.write(new Text("data_paths_store"), new Text(value.toString().hashCode() + ""));
+            context.write(new Text(value.toString().hashCode() + ""), new Text(value.toString()));
         }
     }
 
     public static class DocSplitReducer extends Reducer<Text, Text, Text, Text> {
 
         private MultipleOutputs mos;
-        private final Text result = new Text();
 
         @Override
         public void setup(Context context) {
@@ -63,14 +57,7 @@ public class HadoopDocSplit {
 
         @Override
         public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-            if (key.toString().equalsIgnoreCase("data_paths_store")) {
-                for (Text val : values) {
-                    mos.write(new Text(val.toString()), new Text("sanctum/tweet_documents/tweet_" + val.toString() + "-m-00000"), "data_paths_store");
-                }
-            } else {
-                result.set(key.toString());
-                mos.write(result, new Text(), "tweet_" + key.toString().hashCode());
-            }
+                mos.write(values.iterator().next(), new Text(), "tweet_" + key.toString().hashCode());
         }
 
         @Override
@@ -80,9 +67,8 @@ public class HadoopDocSplit {
 
     }
 
-    public static DataPathStore pathStore = new DataPathStore();
-
     public static void main(String[] args) throws Exception {
+        long startTime = System.currentTimeMillis();
         Configuration conf = new Configuration();
         Job job = Job.getInstance(conf, "doc split");
         job.setJarByClass(HadoopDocSplit.class);
@@ -94,5 +80,6 @@ public class HadoopDocSplit {
         FileInputFormat.addInputPath(job, new Path("sanctum/data"));
         FileOutputFormat.setOutputPath(job, new Path("sanctum/tweet_documents"));
         job.waitForCompletion(true);
+        System.out.println("Job complete (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec)");
     }
 }

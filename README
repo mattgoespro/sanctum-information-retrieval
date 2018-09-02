@@ -12,3 +12,15 @@ Configuration
 
 Check a file named 'config.cfg' for changing flags
 for indexing the Twitter data.
+
+========================================
+Setup (if automatic setup does not work)
+========================================
+
+Hadoop:
+	- Create a new folder in the root directory of the HDFS called 'sanctum'
+	- Create a new folder inside /sanctum called 'data'
+	- Put your data files into the /sanctum/data directory.
+	- Run these commands in order:
+		- hadoop jar SANCTUM-1.0-SNAPSHOT.jar com.sanctum.drivers.HadoopDocSplit
+		- hadoop jar SANCTUM-1.0-SNAPSHOT.jar com.sanctum.drivers.HadoopIndex

@@ -33,10 +33,27 @@ public class Main {
      * @throws java.io.IOException
      */
     public static void main(String[] args) throws IOException {
+        if (args.length == 0 || args.length == 1 || args.length == 2) {
+            System.out.println("Usage: java -cp <jar path> <classpath> <num threads per file> <num mappers per reducer> <num writers>");
+            return;
+        }
+        
+        int numThreadsPerFile, mappersPerReducer, numWriters;
+        
+        try {
+            numThreadsPerFile = Integer.parseInt(args[0]);
+            mappersPerReducer = Integer.parseInt(args[1]);
+            numWriters = Integer.parseInt(args[2]);
+        } catch(Exception e) {
+            System.out.println("Usage: java -cp <jar path> <classpath> <num threads per file> <num mappers per reducer> <num writers>");
+            return;
+        }
+        
         long startTime = System.currentTimeMillis();
-        ThreadedDataLoader loader = new ThreadedDataLoader(10);
+        ThreadedDataLoader loader = new ThreadedDataLoader(numThreadsPerFile);
         boolean config = Configuration.loadConfiguration(null);
-        MapReducer reducer = new MapReducer(2, 100);
+        MapReducer reducer = new MapReducer(mappersPerReducer, numWriters);
+        
         if (config) {
             loader.loadData();
             reducer.mapreduce(loader);
