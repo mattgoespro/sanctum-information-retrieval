@@ -51,7 +51,7 @@ public class Main {
         
         long startTime = System.currentTimeMillis();
         ThreadedDataLoader loader = new ThreadedDataLoader(numThreadsPerFile);
-        boolean config = Configuration.loadConfiguration(null);
+        boolean config = Configuration.loadConfiguration();
         MapReducer reducer = new MapReducer(mappersPerReducer, numWriters);
         
         if (config) {
@@ -60,8 +60,8 @@ public class Main {
             reducer.merge();
             System.out.println(" (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec total)");
         } else {
-            System.out.println("Unable to load config file. Either there is a syntax error in"
-                    + "the config or 'config.cfg' could not be found. Make sure it is in the same"
+            System.out.println("Unable to load config file. Either there is a syntax error in "
+                    + "the config file or 'config.cfg' could not be found. Make sure it is in the same"
                     + "directory as the jar.");
         }
     }

@@ -57,7 +57,7 @@ public class HadoopDocSplit {
 
         @Override
         public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
-                mos.write(values.iterator().next(), new Text(), "tweet_" + key.toString().hashCode());
+            mos.write(values.iterator().next(), new Text(), "tweet_" + key.toString());
         }
 
         @Override

@@ -55,7 +55,11 @@ public class SearchIndex {
         }
 
         ArrayList<String> documents = documents(fs, termArr);
-
+        
+        if(documents == null) {
+            return null;
+        }
+        
         if (documents.size() > 1) {
             rankDocuments(fs, documents, termArr);
         }
@@ -79,6 +83,7 @@ public class SearchIndex {
                     String doc = getDocWithID(fs, docID);
                     tweetDocScanner = getReader(fs, doc);
                     result.add(tweetDocScanner.readLine());
+                    tweetDocScanner.close();
                     count++;
                 }
 
@@ -142,7 +147,11 @@ public class SearchIndex {
                 if (fs == null) {
                     reader = getReader(fs, "index/" + term.charAt(0) + "/" + term + ".index");
                 } else {
-                    reader = getReader(fs, "sanctum/index/" + term + "-m-00000");
+                    if(term.startsWith("#")) {
+                        reader = getReader(fs, "sanctum/index/hashtag_" + term.substring(1) + "-m-00000");
+                    } else {
+                        reader = getReader(fs, "sanctum/index/" + term + "-m-00000");
+                    }
                 }
             } catch (IOException ex) {
                 return null;
@@ -190,7 +199,7 @@ public class SearchIndex {
      * @return String
      */
     public static String getDocWithID(FileSystem fs, String docID) {
-        return fs == null ? Search.pathStore.get(docID) : "sanctum/tweet_documents/tweet_" + docID + "-m-00000a";
+        return fs == null ? Search.pathStore.get(docID) : docID;
     }
 
     /**

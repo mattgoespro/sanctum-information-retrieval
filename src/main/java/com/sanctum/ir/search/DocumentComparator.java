@@ -98,6 +98,7 @@ public class DocumentComparator implements Comparator {
     private double getTfIdf(String doc, String term) throws IOException {
         BufferedReader reader = SearchIndex.getReader(fs, SearchIndex.getDocWithID(fs, doc));
         Tweet t = new Tweet("", reader.readLine(), filter);
+        reader.close();
         t.filter();
         int tf = 0;
 

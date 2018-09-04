@@ -43,12 +43,12 @@ public class Search {
      */
     public static void main(String[] args) throws IOException {
         if (args.length == 0 || args.length == 1 || args.length == 2) {
-            System.out.println("Usage: hadoop jar <jar path> <classpath> <search HDFS?> <top k> [term 1] [term 2] [term 3 ] ...");
+            System.out.println("Usage: java -cp <jar path> <classpath> <search HDFS?> <top k> [term 1] [term 2] [term 3 ] ...");
             return;
         }
 
         Configuration conf = new Configuration();
-        boolean cfg = com.sanctum.ir.Configuration.loadConfiguration(null);
+        boolean cfg = com.sanctum.ir.Configuration.loadConfiguration();
 
         if (cfg) {
             FileSystem fs = null;
@@ -59,7 +59,6 @@ public class Search {
                     fs = FileSystem.get(URI.create(conf.get("fs.defaultFS")), conf);
                 }
             } catch (IOException e) {
-                System.out.println("Usage: hadoop jar <jar path> <classpath> <search HDFS?> <top k> [term 1] [term 2] [term 3 ] ...");
                 return;
             }
 
@@ -68,7 +67,7 @@ public class Search {
             try {
                 k = Integer.parseInt(args[1]);
             } catch (NumberFormatException e) {
-                System.out.println("Usage: hadoop jar <jar path> <classpath> <search HDFS?> <top k> [term 1] [term 2] [term 3 ] ...");
+                System.out.println("Usage: java -cp <jar path> <classpath> <search HDFS?> <top k> [term 1] [term 2] [term 3 ] ...");
                 return;
             }
 

@@ -39,7 +39,6 @@ public class TagFilter {
     private final ArrayList<String> tagValueBlacklist;
     private final boolean inclMentions;
     private final boolean inclHashtags;
-    private final boolean inclLinks;
 
     /**
      * Constructor
@@ -47,7 +46,6 @@ public class TagFilter {
     public TagFilter() {
         this.inclMentions = Boolean.parseBoolean(com.sanctum.ir.Configuration.INDEXING_INCLUDE_MENTIONS);
         this.inclHashtags = Boolean.parseBoolean(com.sanctum.ir.Configuration.INDEXING_INCLUDE_HASHTAGS);
-        this.inclLinks = Boolean.parseBoolean(com.sanctum.ir.Configuration.INDEXING_INCLUDE_LINKS);
         this.tagValueBlacklist = new ArrayList();
     }
 
@@ -98,7 +96,7 @@ public class TagFilter {
             String w = (String) it.next();
 
             if (w != null) {
-                if ((w.startsWith("#") && !this.inclHashtags) || (w.startsWith("@") && !this.inclMentions) || (w.startsWith("http://") && !this.inclLinks)) {
+                if ((w.startsWith("#") && !this.inclHashtags) || (w.startsWith("@") && !this.inclMentions)) {
                     it.remove();
                 } else if (this.tagValueBlacklist.contains(w)) {
                     it.remove();
@@ -113,6 +111,8 @@ public class TagFilter {
      * @return boolean
      */
     public boolean blacklists(String term) {
+        if(term.startsWith("#") && !this.inclHashtags) return true;
+        if(term.startsWith("@") && !this.inclMentions) return true;
         return this.tagValueBlacklist.contains(term);
     }
 }

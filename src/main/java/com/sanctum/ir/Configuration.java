@@ -19,13 +19,7 @@ package com.sanctum.ir;
 
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.Scanner;
-import org.apache.commons.io.IOUtils;
-import org.apache.commons.io.LineIterator;
-import org.apache.hadoop.fs.FSDataInputStream;
-import org.apache.hadoop.fs.FileSystem;
-import org.apache.hadoop.fs.Path;
 
 /**
  * Loads the IR configuration.
@@ -37,60 +31,43 @@ public class Configuration {
     private static final String KEY_DATA_DIRECTORY = "Twitter data directory",
             KEY_INDEXING_INCLUDE_HASHTAGS = "Include hashtags",
             KEY_INDEXING_INCLUDE_MENTIONS = "Include mentions",
-            KEY_INDEXING_INCLUDE_LINKS = "Include links",
             KEY_HADOOP_CONFIG_DIR = "Hadoop config directory";
     public static String DATA_DIRECTORY,
             INDEXING_INCLUDE_HASHTAGS,
             INDEXING_INCLUDE_MENTIONS,
-            INDEXING_INCLUDE_LINKS,
             HADOOP_CONFIG_DIRECTORY;
 
     /**
      * Loads the configuration. Returns true if successful.
      *
-     * @param fs
      * @return boolean
      */
-    public static boolean loadConfiguration(FileSystem fs) {
-        if (fs != null) {
-            FSDataInputStream cfgStream;
-            try {
-                cfgStream = fs.open(new Path("sanctum/config.cfg"));
-                LineIterator lineIterator = IOUtils.lineIterator(cfgStream, "UTF-8");
-                String line;
-                while (lineIterator.hasNext()) {
-                    line = lineIterator.nextLine();
-                    setConfigValue(line);
-                }   return true;
-            } catch (IOException ex) {
-                return false;
+    public static boolean loadConfiguration() {
+        try {
+            Scanner scFile = new Scanner(new File("config.cfg"));
+            String line;
+
+            while (scFile.hasNext()) {
+                line = scFile.nextLine();
+                setConfigValue(line);
             }
-        } else {
-            try {
-                Scanner scFile = new Scanner(new File("config.cfg"));
-                String line;
-                
-                while (scFile.hasNext()) {
-                    line = scFile.nextLine();
-                    setConfigValue(line);
-                }
-                
-                return true;
-            } catch (FileNotFoundException ex) {
-                return false;
-            }
+
+            return true;
+        } catch (FileNotFoundException ex) {
+            return false;
         }
     }
-    
+
     /**
      * Sets a Configuration class value.
-     * @param line 
+     *
+     * @param line
      */
     private static void setConfigValue(String line) {
         if (line.startsWith("#") || line.startsWith(" ") || line.equals("") || line.startsWith("\n")) {
             return;
         }
-        
+
         String value = line.replaceAll("\\s+", "");
         value = value.substring(value.indexOf(":") + 1);
 
@@ -100,9 +77,7 @@ public class Configuration {
             com.sanctum.ir.Configuration.INDEXING_INCLUDE_HASHTAGS = value;
         } else if (line.startsWith(com.sanctum.ir.Configuration.KEY_INDEXING_INCLUDE_MENTIONS)) {
             com.sanctum.ir.Configuration.INDEXING_INCLUDE_MENTIONS = value;
-        } else if (line.startsWith(com.sanctum.ir.Configuration.KEY_INDEXING_INCLUDE_LINKS)) {
-            com.sanctum.ir.Configuration.INDEXING_INCLUDE_LINKS = value;
-        } else if(line.startsWith(com.sanctum.ir.Configuration.KEY_HADOOP_CONFIG_DIR)) {
+        } else if (line.startsWith(com.sanctum.ir.Configuration.KEY_HADOOP_CONFIG_DIR)) {
             com.sanctum.ir.Configuration.HADOOP_CONFIG_DIRECTORY = value;
         }
     }

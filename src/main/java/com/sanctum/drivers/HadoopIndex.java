@@ -25,7 +25,6 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Base64;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
@@ -55,10 +54,20 @@ public class HadoopIndex {
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
             String[] raw = value.toString().split(" ");
             String dir = "sanctum/tweet_documents/tweet_" + value.toString().hashCode() + "-m-00000";
+            writeDocument(context, value);
+            writeIndices(context, raw, dir);
+        }
 
-            // hello my name is matt.i am from south africa?
+        private void writeDocument(Context context, Text value) throws IOException {
+            FileSystem fs = FileSystem.get(URI.create(context.getConfiguration().get("fs.defaultFS")), context.getConfiguration());
+            try (FSDataOutputStream tweetDoc = fs.create(new Path("sanctum/tweet_documents/tweet_" + value.toString().hashCode()))) {
+                tweetDoc.writeBytes(value.toString());
+            }
+        }
+
+        private void writeIndices(Context context, String[] raw, String dir) throws IOException, InterruptedException {
             for (String w : raw) {
-                if (!w.startsWith("http")) {
+                if (!w.startsWith("#")) {
                     w = w.replaceAll("\\p{Punct}", " ");
                     String[] process = w.split(" ");
 
@@ -68,6 +77,7 @@ public class HadoopIndex {
                         }
                     }
                 } else {
+                    w = "#" + w.replaceAll("\\p{Punct}", "");
                     if (!w.equals("") && !HadoopIndex.filter.blacklists(w)) {
                         context.write(new Text(w), new Text(dir));
                     }
@@ -78,13 +88,6 @@ public class HadoopIndex {
 
     public static class PathReducer extends Reducer<Text, Text, Text, Text> {
 
-        private MultipleOutputs mos;
-
-        @Override
-        public void setup(Context context) {
-            mos = new MultipleOutputs(context);
-        }
-
         @Override
         public void reduce(Text key, Iterable<Text> values, Context context) throws IOException, InterruptedException {
             if (key.toString().equalsIgnoreCase("part")) {
@@ -93,19 +96,17 @@ public class HadoopIndex {
 
             String keyDir = key.toString().length() > 30 ? key.toString().substring(0, 30) : key.toString();
             FileSystem fs = FileSystem.get(URI.create(context.getConfiguration().get("fs.defaultFS")), context.getConfiguration());
-            
+
+            if (keyDir.startsWith("#")) {
+                keyDir = "hashtag_" + keyDir.substring(1);
+            }
+
             try (FSDataOutputStream w = fs.create(new Path("sanctum/index/" + keyDir + "-m-00000"))) {
                 for (Text val : values) {
                     w.writeBytes(val.toString() + "\n");
                 }
             }
         }
-
-        @Override
-        protected void cleanup(Context context) throws IOException, InterruptedException {
-            mos.close();
-        }
-
     }
 
     public static TagFilter filter = new TagFilter();
@@ -117,7 +118,7 @@ public class HadoopIndex {
         conf.addResource(new Path("file:///etc/hadoop/conf/hdfs-site.xml"));
         FileSystem fs = FileSystem.get(URI.create(conf.get("fs.defaultFS")), conf);
 
-        boolean irConfig = com.sanctum.ir.Configuration.loadConfiguration(null);
+        boolean irConfig = com.sanctum.ir.Configuration.loadConfiguration();
 
         if (irConfig) {
             filter.loadBlacklist(null);
@@ -138,29 +139,5 @@ public class HadoopIndex {
                     + "the config or 'config.cfg' could not be found. Make sure it is in the same"
                     + "directory as the jar.");
         }
-    }
-
-    /**
-     * Read the object from Base64 string.
-     */
-    private static Object fromString(String s) throws IOException,
-            ClassNotFoundException {
-        byte[] data = Base64.getDecoder().decode(s);
-        ObjectInputStream ois = new ObjectInputStream(
-                new ByteArrayInputStream(data));
-        Object o = ois.readObject();
-        ois.close();
-        return o;
-    }
-
-    /**
-     * Write the object to a Base64 string.
-     */
-    private static String toString(Serializable o) throws IOException {
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        ObjectOutputStream oos = new ObjectOutputStream(baos);
-        oos.writeObject(o);
-        oos.close();
-        return Base64.getEncoder().encodeToString(baos.toByteArray());
     }
 }

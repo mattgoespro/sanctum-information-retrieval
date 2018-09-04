@@ -17,11 +17,7 @@
  */
 package com.sanctum.ir;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Tweet class represents the raw tweet data and its tagged parts.
@@ -57,19 +53,21 @@ public class Tweet {
         tokenizedRawText = rawText.split(" ");
 
         for (String word : tokenizedRawText) {
-            if (!word.startsWith("http")) {
+            if (!word.startsWith("#")) {
                 word = word.replaceAll("\\p{Punct}", " ");
                 String[] process = word.split(" ");
 
                 for (String s : process) {
-                    if (!s.equals("")) {
+                    if (!s.equals("") && !this.filter.blacklists(s)) {
                         words.add(s);
                     }
                 }
             } else {
                 words.add(word);
             }
+
         }
+
         filter.filterText(words);
     }
 
@@ -81,22 +79,23 @@ public class Tweet {
     public String getContainingFileName() {
         return this.containedFile;
     }
-    
+
     /**
      * Returns a list of filtered words in the Tweet.
+     *
      * @return ArrayList
      */
     public ArrayList<String> getWords() {
         return this.words;
     }
-    
+
     @Override
     public String toString() {
         String str = "";
-        for(String word : words) {
+        for (String word : words) {
             str += word + " ";
         }
-        
+
         return str;
     }
 }
