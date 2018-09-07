@@ -44,7 +44,7 @@ public class Main {
             numThreadsPerFile = Integer.parseInt(args[0]);
             mappersPerReducer = Integer.parseInt(args[1]);
             numWriters = Integer.parseInt(args[2]);
-        } catch(Exception e) {
+        } catch(NumberFormatException e) {
             System.out.println("Usage: java -cp <jar path> <classpath> <num threads per file> <num mappers per reducer> <num writers>");
             return;
         }

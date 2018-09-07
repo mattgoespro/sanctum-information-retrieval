@@ -42,8 +42,10 @@ public class Search {
      * @throws java.io.IOException
      */
     public static void main(String[] args) throws IOException {
+        
         if (args.length == 0 || args.length == 1 || args.length == 2) {
-            System.out.println("Usage: java -cp <jar path> <classpath> <search HDFS?> <top k> [term 1] [term 2] [term 3 ] ...");
+            System.out.println("Too few arguments. Usage:\nSearch HDFS index: hadoop jar <jar path> com.sanctum.drivers.Search true <top k> [term 1] [term 2] [term 3 ] ...\n"
+                    + "Search local index: java -cp <jar path> com.sanctum.drivers.Search false <top k> [term 1] [term 2] [term 3 ] ...");
             return;
         }
 
@@ -52,22 +54,26 @@ public class Search {
 
         if (cfg) {
             FileSystem fs = null;
-            try {
-                if (Boolean.parseBoolean(args[0])) {
-                    conf.addResource(new Path(URI.create(com.sanctum.ir.Configuration.HADOOP_CONFIG_DIRECTORY + "core-site.xml")));
-                    conf.addResource(new Path(URI.create(com.sanctum.ir.Configuration.HADOOP_CONFIG_DIRECTORY + "hdfs-site.xml")));
-                    fs = FileSystem.get(URI.create(conf.get("fs.defaultFS")), conf);
-                }
-            } catch (IOException e) {
-                return;
+            
+            if (Boolean.parseBoolean(args[0])) {
+                conf.addResource(new Path(URI.create(com.sanctum.ir.Configuration.HADOOP_CONFIG_DIRECTORY + "core-site.xml")));
+                conf.addResource(new Path(URI.create(com.sanctum.ir.Configuration.HADOOP_CONFIG_DIRECTORY + "hdfs-site.xml")));
+                fs = FileSystem.get(URI.create(conf.get("fs.defaultFS")), conf);
             }
 
             int k = 0;
 
             try {
                 k = Integer.parseInt(args[1]);
+                
+                if(k < 0) {
+                    System.out.println("k must be an integer greater than -1. Usage:\nSearch HDFS index: hadoop jar <jar path> com.sanctum.drivers.Search true <top k> [term 1] [term 2] [term 3 ] ...\n"
+                    + "Search local index: java -cp <jar path> com.sanctum.drivers.Search false <top k> [term 1] [term 2] [term 3 ] ...");
+                    return;
+                }
             } catch (NumberFormatException e) {
-                System.out.println("Usage: java -cp <jar path> <classpath> <search HDFS?> <top k> [term 1] [term 2] [term 3 ] ...");
+                System.out.println("k must be an integer. Usage:\nSearch HDFS index: hadoop jar <jar path> com.sanctum.drivers.Search true <top k> [term 1] [term 2] [term 3 ] ...\n"
+                    + "Search local index: java -cp <jar path> com.sanctum.drivers.Search false <top k> [term 1] [term 2] [term 3 ] ...");
                 return;
             }
 
@@ -77,17 +83,21 @@ public class Search {
             f.loadBlacklist(fs);
 
             for (int i = 0; i < args.length; i++) {
+                if(args[i].startsWith("hashtag_")) {
+                    args[i] = "#" + args[i].substring(8);
+                }
+                
                 if (f.blacklists(args[i])) {
                     args[i] = null;
                 }
             }
-            
+
             String[] arguments = new String[args.length - 2];
-            
+
             for (int i = 2; i < args.length; i++) {
-                arguments[i-2] = args[i];
+                arguments[i - 2] = args[i];
             }
-            
+
             Collection<String> search = SearchIndex.search(fs, arguments, k);
 
             if (search != null) {
@@ -95,7 +105,7 @@ public class Search {
             } else {
                 System.out.println("No results found.");
             }
-            System.out.println("Search complete (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec)");
+            System.out.println("Search complete (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec)\nResults written to sanctum/search_results/search.");
         } else {
             System.out.println("Unable to load config.");
         }
@@ -110,7 +120,7 @@ public class Search {
      */
     private static void writeSearchResults(FileSystem fs, Collection<String> results, TagFilter filter) throws IOException {
         if (fs != null) {
-            try (FSDataOutputStream writer = fs.create(new Path("sanctum/search_results"))) {
+            try (FSDataOutputStream writer = fs.create(new Path("sanctum/search_results/search"))) {
                 for (String result : results) {
                     Tweet t = new Tweet("", result, filter);
                     t.filter();
@@ -120,7 +130,7 @@ public class Search {
         } else {
             File f = new File("search_results");
             f.mkdir();
-            
+
             try (FileWriter writer = new FileWriter("search_results/search")) {
                 for (String result : results) {
                     Tweet t = new Tweet("", result, filter);

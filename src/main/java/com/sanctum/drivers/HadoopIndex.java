@@ -18,14 +18,8 @@
 package com.sanctum.drivers;
 
 import com.sanctum.ir.TagFilter;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
-import java.io.Serializable;
 import java.net.URI;
-import java.util.Base64;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.fs.FSDataOutputStream;
 import org.apache.hadoop.fs.FileSystem;
@@ -36,7 +30,6 @@ import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.MultipleOutputs;
 
 public class HadoopIndex {
 
@@ -53,7 +46,7 @@ public class HadoopIndex {
         @Override
         public void map(Object key, Text value, Context context) throws IOException, InterruptedException {
             String[] raw = value.toString().split(" ");
-            String dir = "sanctum/tweet_documents/tweet_" + value.toString().hashCode() + "-m-00000";
+            String dir = "sanctum/tweet_documents/tweet_" + value.toString().hashCode();
             writeDocument(context, value);
             writeIndices(context, raw, dir);
         }
@@ -100,8 +93,10 @@ public class HadoopIndex {
             if (keyDir.startsWith("#")) {
                 keyDir = "hashtag_" + keyDir.substring(1);
             }
-
-            try (FSDataOutputStream w = fs.create(new Path("sanctum/index/" + keyDir + "-m-00000"))) {
+            
+            String path = keyDir.startsWith("hashtag_") ? "sanctum/index/hashtags/" + keyDir + ".index" : "sanctum/index/" + keyDir.charAt(0) + "/" + keyDir + ".index";
+            
+            try (FSDataOutputStream w = fs.create(new Path(path))) {
                 for (Text val : values) {
                     w.writeBytes(val.toString() + "\n");
                 }

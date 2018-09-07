@@ -148,9 +148,9 @@ public class SearchIndex {
                     reader = getReader(fs, "index/" + term.charAt(0) + "/" + term + ".index");
                 } else {
                     if(term.startsWith("#")) {
-                        reader = getReader(fs, "sanctum/index/hashtag_" + term.substring(1) + "-m-00000");
+                        reader = getReader(fs, "sanctum/index/hashtags/hashtag_" + term.substring(1));
                     } else {
-                        reader = getReader(fs, "sanctum/index/" + term + "-m-00000");
+                        reader = getReader(fs, "sanctum/index/" + term.charAt(0) + "/" + term + ".index");
                     }
                 }
             } catch (IOException ex) {
