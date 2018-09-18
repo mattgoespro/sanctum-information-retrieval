@@ -17,7 +17,6 @@
  */
 package com.sanctum.ir.mapreduce;
 
-import com.sanctum.ir.mapreduce.MapReducer;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
@@ -51,14 +50,25 @@ public class IndexWriter extends Thread {
         for (String key : keys) {
             String f = key.toLowerCase().charAt(0) + "/";
             File letterIndex = new File("index/" + f);
-
+            
+            if(key.startsWith("hashtag_")) letterIndex = new File("index/hashtags/");
+            else if(key.startsWith("mention_")) letterIndex = new File("index/mentions/");
+            
             if (!letterIndex.exists()) {
                 letterIndex.mkdir();
             }
 
             try {
                 String keyDir = key.length() > 30 ? key.substring(0, 30) : key;
-                writer = new FileWriter(new File("index/" + f + keyDir.toLowerCase() + ".index"));
+                String path = "index/" + keyDir.charAt(0) + "/";
+                
+                if(key.startsWith("hashtag_")) {
+                    path = "index/hashtags/";
+                } else if(key.startsWith("mention_")) {
+                    path = "index/mentions/";
+                }
+                
+                writer = new FileWriter(new File(path, keyDir + ".index"));
                 
                 for (String i : MapReducer.finalMap.get(key)) {
                     writer.write(i + "\n");

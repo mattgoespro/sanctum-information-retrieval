@@ -83,9 +83,7 @@ public class Search {
             f.loadBlacklist(fs);
 
             for (int i = 0; i < args.length; i++) {
-                if(args[i].startsWith("hashtag_")) {
-                    args[i] = "#" + args[i].substring(8);
-                }
+                args[i] = args[i].toLowerCase();
                 
                 if (f.blacklists(args[i])) {
                     args[i] = null;
@@ -104,6 +102,8 @@ public class Search {
                 writeSearchResults(fs, search, f);
             } else {
                 System.out.println("No results found.");
+                System.out.println("Search complete (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec)");
+                return;
             }
             System.out.println("Search complete (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec)\nResults written to sanctum/search_results/search.");
         } else {

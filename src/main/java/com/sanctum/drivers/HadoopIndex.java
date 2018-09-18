@@ -50,17 +50,32 @@ public class HadoopIndex {
             writeDocument(context, value);
             writeIndices(context, raw, dir);
         }
-
+        
+        /**
+         * Writes a single document containing a single tweet.
+         * @param context
+         * @param value
+         * @throws IOException 
+         */
         private void writeDocument(Context context, Text value) throws IOException {
             FileSystem fs = FileSystem.get(URI.create(context.getConfiguration().get("fs.defaultFS")), context.getConfiguration());
             try (FSDataOutputStream tweetDoc = fs.create(new Path("sanctum/tweet_documents/tweet_" + value.toString().hashCode()))) {
                 tweetDoc.writeBytes(value.toString());
             }
         }
-
+        
+        /**
+         * Writes the indices to the context given the raw data from the file.
+         * @param context
+         * @param raw
+         * @param dir
+         * @throws IOException
+         * @throws InterruptedException 
+         */
         private void writeIndices(Context context, String[] raw, String dir) throws IOException, InterruptedException {
             for (String w : raw) {
                 if (!w.startsWith("#")) {
+                    w = w.replaceAll("\t", " ");
                     w = w.replaceAll("\\p{Punct}", " ");
                     String[] process = w.split(" ");
 
@@ -89,12 +104,15 @@ public class HadoopIndex {
 
             String keyDir = key.toString().length() > 30 ? key.toString().substring(0, 30) : key.toString();
             FileSystem fs = FileSystem.get(URI.create(context.getConfiguration().get("fs.defaultFS")), context.getConfiguration());
-
+            String path = "sanctum/index/" + keyDir.charAt(0) + "/" + keyDir + ".index";
+            
             if (keyDir.startsWith("#")) {
                 keyDir = "hashtag_" + keyDir.substring(1);
+                path = "sanctum/index/hashtags/" + keyDir + ".index";
+            } else if(keyDir.startsWith("@")) {
+                keyDir = "mention_" + keyDir.substring(1);
+                path = "sanctum/index/mentions/" + keyDir + ".index";
             }
-            
-            String path = keyDir.startsWith("hashtag_") ? "sanctum/index/hashtags/" + keyDir + ".index" : "sanctum/index/" + keyDir.charAt(0) + "/" + keyDir + ".index";
             
             try (FSDataOutputStream w = fs.create(new Path(path))) {
                 for (Text val : values) {
@@ -131,7 +149,7 @@ public class HadoopIndex {
             System.out.println("Job complete (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec)");
         } else {
             System.out.println("Unable to load config file. Either there is a syntax error in"
-                    + "the config or 'config.cfg' could not be found. Make sure it is in the same"
+                    + " the config or 'config.cfg' could not be found. Make sure it is in the same"
                     + "directory as the jar.");
         }
     }

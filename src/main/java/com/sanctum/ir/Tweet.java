@@ -54,6 +54,7 @@ public class Tweet {
 
         for (String word : tokenizedRawText) {
             if (!word.startsWith("#")) {
+                word = word.replaceAll("\t", " ");
                 word = word.replaceAll("\\p{Punct}", " ");
                 String[] process = word.split(" ");
 

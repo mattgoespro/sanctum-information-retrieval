@@ -118,6 +118,7 @@ public class SearchIndex {
                     String doc = getDocWithID(fs, docID);
                     tweetDocScanner = getReader(fs, doc);
                     result.add(tweetDocScanner.readLine());
+                    tweetDocScanner.close();
                     count++;
                 }
 
@@ -145,10 +146,18 @@ public class SearchIndex {
 
             try {
                 if (fs == null) {
-                    reader = getReader(fs, "index/" + term.charAt(0) + "/" + term + ".index");
+                    if(term.startsWith("hashtag_")) {
+                        reader = getReader(fs, "index/hashtags/" + term + ".index");
+                    } else if(term.startsWith("mention_")) {
+                        reader = getReader(fs, "index/mentions/" + term + ".index");
+                    } else {
+                        reader = getReader(fs, "index/" + term.charAt(0) + "/" + term + ".index");
+                    }
                 } else {
-                    if(term.startsWith("#")) {
-                        reader = getReader(fs, "sanctum/index/hashtags/hashtag_" + term.substring(1));
+                    if(term.startsWith("hashtag_")) {
+                        reader = getReader(fs, "sanctum/index/hashtags/" + term + ".index");
+                    } else if(term.startsWith("mention_")) {
+                        reader = getReader(fs, "sanctum/index/mentions/" + term + ".index");
                     } else {
                         reader = getReader(fs, "sanctum/index/" + term.charAt(0) + "/" + term + ".index");
                     }
@@ -186,8 +195,16 @@ public class SearchIndex {
      */
     private static void rankDocuments(FileSystem fs, ArrayList<String> documents, String[] query) {
         String[] docs = new String[documents.size()];
-        documents.toArray(docs);
+        
+        for (int i = 0; i < documents.size(); i++) {
+            docs[i] = documents.get(i);
+        }
         Arrays.sort(docs, new DocumentComparator(fs, query));
+        documents.clear();
+        
+        for (int i = 0; i < docs.length; i++) {
+            documents.add(docs[i]);
+        }
     }
 
     /**

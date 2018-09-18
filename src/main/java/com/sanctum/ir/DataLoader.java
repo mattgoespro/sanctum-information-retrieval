@@ -42,7 +42,7 @@ public class DataLoader {
         try {
             pathStore.load(null);
         } catch (IOException ex) {
-            System.out.println("Unable to load file path store.");
+            System.out.println("Unable to load file path store...creating it.");
         }
     }
 

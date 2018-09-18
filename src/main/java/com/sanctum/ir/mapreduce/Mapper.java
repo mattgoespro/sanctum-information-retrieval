@@ -59,6 +59,9 @@ public class Mapper extends Thread {
                 String key = (String) k;
                 key = key.toLowerCase();
                 
+                if(key.startsWith("#")) key = "hashtag_" + key.substring(1);
+                else if(key.startsWith("@")) key = "mention_" + key.substring(1);
+                
                 if (pairs.containsKey(key)) {
                     pairs.get(key).add(ThreadedDataLoader.pathStore.getKey(t.getContainingFileName()));
                 } else {

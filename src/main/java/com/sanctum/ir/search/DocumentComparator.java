@@ -19,7 +19,6 @@ package com.sanctum.ir.search;
 
 import com.sanctum.ir.TagFilter;
 import com.sanctum.ir.ThreadedDataLoader;
-import com.sanctum.ir.Tweet;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.util.Comparator;
@@ -49,7 +48,7 @@ public class DocumentComparator implements Comparator {
         this.fs = fs;
         this.queryTerms = queryTerms;
         this.filter = new TagFilter();
-        
+
         try {
             filter.loadBlacklist(fs);
         } catch (IOException ex) {
@@ -68,8 +67,8 @@ public class DocumentComparator implements Comparator {
 
                     for (String term : queryTerms) {
                         try {
-                            score1 += getTfIdf(doc1, term);
-                            score2 += getTfIdf(doc2, term);
+                            score1 += getTfIdf(term);
+                            score2 += getTfIdf(term);
                         } catch (IOException ex) {
                             System.out.println("Unable to read tf-idf rank for one of the required documents.");
                         }
@@ -95,18 +94,38 @@ public class DocumentComparator implements Comparator {
      * @param term
      * @return double
      */
-    private double getTfIdf(String doc, String term) throws IOException {
-        BufferedReader reader = SearchIndex.getReader(fs, SearchIndex.getDocWithID(fs, doc));
-        Tweet t = new Tweet("", reader.readLine(), filter);
-        reader.close();
-        t.filter();
-        int tf = 0;
+    private double getTfIdf(String term) throws IOException {
+        String path;
 
-        for (String word : t.getWords()) {
-            if (word.equalsIgnoreCase(term)) {
-                tf++;
+        if (fs == null) {
+            if (term.startsWith("hashtag_")) {
+                path = "index/hashtags/" + term + ".index";
+            } else if (term.startsWith("mention_")) {
+                path = "index/mentions/" + term + ".index";
+            } else {
+                path = "index/" + term.charAt(0) + "/" + term + ".index";
+            }
+        } else {
+            if (term.startsWith("hashtag_")) {
+                path = "sanctum/index/hashtags/" + term + ".index";
+            } else if (term.startsWith("mention_")) {
+                path = "sanctum/index/mentions/" + term + ".index";
+            } else {
+                path = "sanctum/index/" + term.charAt(0) + "/" + term + ".index";
             }
         }
+
+        BufferedReader reader = SearchIndex.getReader(fs, path);
+        int tf = 0;
+
+        String line = reader.readLine();
+        while (line != null) {
+            tf++;
+            line = reader.readLine();
+        }
+
+        assert (tf != 0);
+        reader.close();
 
         double idf = Math.log(((double) ThreadedDataLoader.COLLECTION_SIZE) / (double) tf);
         return tf * idf;

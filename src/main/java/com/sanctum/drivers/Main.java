@@ -56,6 +56,11 @@ public class Main {
         
         if (config) {
             loader.loadData();
+            
+            if(ThreadedDataLoader.data.isEmpty()) {
+                return;
+            }
+            
             reducer.mapreduce(loader);
             reducer.merge();
             System.out.println(" (" + (System.currentTimeMillis() - startTime) / 1000.0 + " sec total)");
