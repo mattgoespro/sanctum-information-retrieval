@@ -1,4 +1,4 @@
-============================================================================
+<!-- ============================================================================
 SANCTUM Information Retrieval Module for Indexing and Searching Twitter Data
 ============================================================================
 
@@ -44,4 +44,4 @@ Searching:
 	- Search HDFS: hadoop jar <jar path> com.sanctum.drivers.Search true <top k> [term 1] [term 2] [term 3] ...  
 	- Search local filesystem: java -cp <jar path> com.sanctum.drivers.Search false <top k> [term 1] [term 2] [term 3] ...  
 	- When searching for hashtags or mentions, replace the '#' and '@' symbols with 'hashtag_' and 'mention_' respectively.
-		- Eg. #trump -> hashtag_trump, @justin -> 'mention_justin'
+		- Eg. #trump -> hashtag_trump, @justin -> 'mention_justin' -->
